@@ -1,0 +1,10 @@
+.formLabel {
+  display: inline-block;
+  min-width: 20%;
+  vertical-align: top;
+  margin-right: 2%;
+}
+
+.formInput {
+  width: 78%;
+}
