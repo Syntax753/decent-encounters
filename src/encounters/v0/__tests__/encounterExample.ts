@@ -1,7 +1,6 @@
-const text = `
+const text = `<!-- Encounter v0.1 -->
 # General
 
-* version=0.1
 * title=The Bridge Troll
 * model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k
 

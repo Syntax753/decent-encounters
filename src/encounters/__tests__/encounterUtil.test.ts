@@ -1,131 +1,132 @@
-import { stripOutcomeCodes, findOutcomeInText } from '../encounterUtil';
+import { stripTriggerCodes, findCharacterTriggerInText } from '../encounterUtil';
+import CharacterTrigger from '../v0/types/CharacterTrigger';
 
 describe('encounterUtil', () => {
-  describe('findOutcomeInText()', () => {
-    it('should find no outcomes in empty string', () => {
-      const outcomes = {'1':'Outcome One', '2':'Outcome Two'};
+  describe('findCharacterTriggerInText()', () => {
+    it('should find no triggers in empty string', () => {
+      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
       const text = "";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBeNull();
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger).toBeNull();
     });
 
-    it('should find no outcomes in string with no codes', () => {
-      const outcomes = {'1':'Outcome One', '2':'Outcome Two'};
+    it('should find no triggers in string with no codes', () => {
+      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
       const text = "hi";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBeNull();
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger).toBeNull();
     });
 
-    it('should find no outcomes in string with just a @', () => {
-      const outcomes = {'1':'Outcome One', '2':'Outcome Two'};
+    it('should find no triggers in string with just a @', () => {
+      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
       const text = "hi@";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBeNull();
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger).toBeNull();
     });
 
-    it('should find no outcomes in string if code does not match an outcome', () => {
-      const outcomes = {'1':'Outcome One', '2':'Outcome Two'};
+    it('should find no triggers in string if code does not match a trigger', () => {
+      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
       const text = "hi@3";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBeNull();
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger).toBeNull();
     });
 
-    it('should find no outcomes in string if encounter does not have any outcomes defined', () => {
-      const outcomes = {};
-      const text = "hi@1";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBeNull();
-    });
-
-    it('finds outcome by itself', () => {
-      const outcomes = {'1':'Outcome One', '2':'Outcome Two'};
+    it('should find no triggers in string if encounter does not have any triggers defined', () => {
+      const characterTriggers:CharacterTrigger[] = [];
       const text = "@1";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBe('Outcome One');
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger).toBeNull();
     });
 
-    it('finds outcome at beginning of text', () => {
-      const outcomes = {'1':'Outcome One', '2':'Outcome Two'};
+    it('finds trigger by itself', () => {
+      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+      const text = "@1";
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger?.triggerCode).toBe('1');
+    });
+
+    it('finds trigger at beginning of text', () => {
+      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
       const text = "@1Text";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBe('Outcome One');
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger?.triggerCode).toBe('1');
     });
 
-    it('finds outcome at end of text', () => {
-      const outcomes = {'1':'Outcome One', '2':'Outcome Two'};
+    it('finds triggers at end of text', () => {
+      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
       const text = "Text@1";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBe('Outcome One');
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger?.triggerCode).toBe('1');
     });
 
-    it('finds outcome in middle of text', () => {
-      const outcomes = {'1':'Outcome One', '2':'Outcome Two'};
+    it('finds trigger in middle of text', () => {
+     const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
       const text = "Text@1Text";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBe('Outcome One');
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger?.triggerCode).toBe('1');
     });
 
-    it('finds outcome if code has two @', () => {
-      const outcomes = {'1':'Outcome One', '2':'Outcome Two'};
+    it('finds trigger if code has two @', () => {
+      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
       const text = "Text@@1Text";
-      const outcome = findOutcomeInText(text, outcomes);
-      expect(outcome).toBe('Outcome One');
+      const trigger = findCharacterTriggerInText(text, characterTriggers);
+      expect(trigger?.triggerCode).toBe('1');
     });
     
   });
 
-  describe('stripOutcomeCodes()', () => {
+  describe('stripTriggerCodes()', () => {
     it('returns empty string unchanged', () => {
       const input = "";
-      const output = stripOutcomeCodes(input);
+      const output = stripTriggerCodes(input);
       expect(output).toEqual(input);
     });
 
     it('returns text with no codes unchanged', () => {
       const input = "just an ordinary bit of text";
-      const output = stripOutcomeCodes(input);
+      const output = stripTriggerCodes(input);
       expect(output).toEqual(input);
     });
 
-    it('should strip single outcome code', () => {
+    it('should strip single trigger code', () => {
       const input = "You have succeeded! @1";
-      const output = stripOutcomeCodes(input);
+      const output = stripTriggerCodes(input);
       expect(output).toBe("You have succeeded! ");
     });
 
-    it('strips outcome code by itself', () => {
+    it('strips trigger code by itself', () => {
       const input = "@1";
-      const output = stripOutcomeCodes(input);
+      const output = stripTriggerCodes(input);
       expect(output).toBe("");
     });
 
-    it('strips two outcome codes by themselves', () => {
+    it('strips two trigger codes by themselves', () => {
       const input = "@1@2";
-      const output = stripOutcomeCodes(input);
+      const output = stripTriggerCodes(input);
       expect(output).toBe("");
     });
 
-    it('strips outcome code at beginning of text', () => {
+    it('strips trigger code at beginning of text', () => {
       const input = "@1text";
-      const output = stripOutcomeCodes(input);
+      const output = stripTriggerCodes(input);
       expect(output).toBe("text");
     });
 
-    it('strips outcome code at end of text', () => {
+    it('strips trigger code at end of text', () => {
       const input = "text@1";
-      const output = stripOutcomeCodes(input);
+      const output = stripTriggerCodes(input);
       expect(output).toBe("text");
     });
 
-    it('strips outcome code in middle of text', () => {
+    it('strips trigger code in middle of text', () => {
       const input = "te@1xt";
-      const output = stripOutcomeCodes(input);
+      const output = stripTriggerCodes(input);
       expect(output).toBe("text");
     });
 
-    it('strips multiple outcome codes from text', () => {
+    it('strips multiple trigger codes from text', () => {
       const input = "@2te@1xt@3";
-      const output = stripOutcomeCodes(input);
+      const output = stripTriggerCodes(input);
       expect(output).toBe("text");
     });
   });

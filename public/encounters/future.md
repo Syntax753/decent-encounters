@@ -1,3 +1,4 @@
+Encounter v1.0
 # Syntax Guide
 
 All statements in the "Syntax Guide" section will not affect the encounter. It is here for reference. Feel free to delete.

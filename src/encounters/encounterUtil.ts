@@ -1,31 +1,25 @@
-import Encounter from "./types/Encounter";
+import Encounter, { LATEST_MAJOR_VERSION } from "./types/Encounter";
+import { majorVersion, parseVersion } from "./versionUtil";
+import { textToEncounter } from "./v0/readerUtil";
+import { baseUrl } from "@/common/urlUtil";
+import CharacterTrigger from "./v0/types/CharacterTrigger";
 
-export function createDefaultEncounter():Encounter {
-  return {
-    title: 'The Bridge Troll',
-    preamble: `As you attempt to cross a bridge, a troll emerges from beneath it, blocking your path. The troll seems disinclined to let you past.`,
-    systemMessage: `You are a troll guarding a bridge. ` + 
-        `You won't allow the user to cross the bridge unless the user can describe something that you've never heard of before. ` +
-        `If the user is successful, output the text "@1" (no quotes). ` +
-        `All of your responses should be less than 20 words long.`,
-    outcomes: {'1':`The troll, having never heard of the described item, reluctantly allows you to pass. Victory!`}
-  };
-}
-
-export function findOutcomeInText(responseText:string, outcomes:Record<string,string>):string|null {
+export function findCharacterTriggerInText(responseText:string, characterTriggers:CharacterTrigger[]):CharacterTrigger|null {
+  if (!characterTriggers.length) return null;
   let pos = 0;
   while(pos < responseText.length) {
     pos = responseText.indexOf('@', pos);  
     if (pos === -1) return null;
-    const outcomeChar = responseText[pos+1];
-    const outcomeText = outcomes[outcomeChar];
-    if (outcomeText) return outcomeText;
+    const triggerCode = responseText[pos+1];
+    for(let triggerI = 0; triggerI < characterTriggers.length; ++triggerI) {
+      if (triggerCode === characterTriggers[triggerI].triggerCode) return characterTriggers[triggerI];
+    }
     ++pos;
   }
   return null;
 }
 
-export function stripOutcomeCodes(responseText:string):string {
+export function stripTriggerCodes(responseText:string):string {
   let pos = responseText.indexOf('@');
   if (pos === -1) return responseText; // Trivial case.
 
@@ -38,4 +32,19 @@ export function stripOutcomeCodes(responseText:string):string {
   }
   if (pos < responseText.length) concat += responseText.substring(pos);
   return concat;
+}
+
+function _textToEncounter(text:string):Encounter {
+  const version = parseVersion(text);
+  const majorVersionNo = majorVersion(version); // For now, only v0 is supported.
+  if (majorVersionNo !== LATEST_MAJOR_VERSION) throw Error(`Unsupported encounter version: ${version}`);
+  return textToEncounter(text);
+}
+
+export async function loadEncounter(encounterUrl:string):Promise<Encounter> {
+  const url = baseUrl(encounterUrl);
+  const response = await fetch(url);
+  if (!response.ok) throw Error(`Failed to load encounter from URL: ${encounterUrl}`);
+  const text = await response.text();
+  return _textToEncounter(text);
 }

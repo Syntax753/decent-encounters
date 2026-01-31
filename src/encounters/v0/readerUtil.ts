@@ -4,6 +4,7 @@ import Encounter from "./types/Encounter";
 import Action from "./types/Action";
 import ActionType from "./types/ActionType";
 import CharacterTrigger from "./types/CharacterTrigger";
+import { parseVersion } from "../versionUtil";
 
 function _stripEnclosers(text:string, enclosingText:string):string {
   text = text.trim();
@@ -68,12 +69,10 @@ function _parseInstructionSection(instructionSection?:string):[Action[], Charact
 }
 
 export function textToEncounter(text:string):Encounter {
+  const version = parseVersion(text); // Throws if missing/invalid.
   const sections = parseSections(text);
 
-  const generalSettings = parseNameValueLines(sections.General);
-  const version = generalSettings.version;
-  if (!version) throw new Error('Encounter is missing version information in General section.');
-  
+  const generalSettings = sections.General ? parseNameValueLines(sections.General) : {}
   const title = generalSettings.title || 'Untitled Encounter';
   const model = generalSettings.model || 'default';
 

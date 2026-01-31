@@ -4,7 +4,7 @@ import ActionType from '../types/ActionType';
 
 describe('readerUtil', () => {
   it('reads a minimal text', () => {
-    const encounter = textToEncounter('# General\n* version=0.1');
+    const encounter = textToEncounter('<!-- Encounter v0.1 -->');
     expect(encounter).toBeDefined();
     expect(encounter.title).toBe('Untitled Encounter');
     expect(encounter.version).toBe('0.1');
