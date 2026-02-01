@@ -80,6 +80,6 @@ export function textToEncounter(text:string):Encounter {
   const [instructionActions, characterTriggers] = _parseInstructionSection(sections.Instructions);
 
   return {
-    version, title, model, startActions, instructionActions, characterTriggers 
+    version, title, model, startActions, instructionActions, characterTriggers, sourceText:text 
   };
 }

@@ -1,11 +1,11 @@
-// import { useState } from "react";
+import { useState } from "react";
 
 import ModalDialog from "@/components/modalDialogs/ModalDialog";
 import DialogButton from "@/components/modalDialogs/DialogButton";
 import DialogFooter from "@/components/modalDialogs/DialogFooter";
 import Encounter from "@/encounters/types/Encounter";
-// import styles from './EncounterConfigDialog.module.css';
-// import { assert } from "decent-portal";
+import styles from './EncounterConfigDialog.module.css';
+import { textToEncounter } from "@/encounters/v0/readerUtil";
 
 type Props = {
   encounter:Encounter,
@@ -14,19 +14,47 @@ type Props = {
   onSave:(encounter:Encounter) => void
 }
 
+function _onSaveClick(sourceText:string, onSave:(encounter:Encounter) => void, onSetLastError:(error:string) => void) {
+  try {
+    const encounter = textToEncounter(sourceText);
+    onSave(encounter);
+  } catch (e:any) {
+    onSetLastError(`Error: ${e.message}`);
+    return;
+  }
+}
+
 function EncounterConfigDialog(props:Props) {
-  const { onCancel, isOpen} = props;
+  const { onCancel, onSave, isOpen, encounter } = props;
+  const [sourceText, setSourceText] = useState<string>(encounter?.sourceText || '');
+  const [lastError, setLastError] = useState<string>('');
+
+  if (!isOpen) return null;
 
   return (
     <ModalDialog isOpen={isOpen} title='Configure Encounter'>
-      <p>TODO</p>
-      
+      <textarea className={styles.formInput} value={sourceText} onChange={(e) => setSourceText(e.target.value)} />
+      <p>{lastError}</p>
+
       <DialogFooter>
-        <DialogButton text='Cancel' onClick={onCancel} />
-        <DialogButton text='Save' onClick={() => {}} isPrimary />
+        <DialogButton key='Cancel' text='Cancel' onClick={onCancel} />
+        <DialogButton key='Save' text='Save' onClick={() => _onSaveClick(sourceText, onSave, setLastError)} isPrimary />
       </DialogFooter>
     </ModalDialog>
   );
 }
+
+/*
+return (
+    <ModalDialog isOpen={isOpen} title='Configure Encounter'>
+      
+      <p>{lastError}</p>
+      
+      <DialogFooter>
+        <DialogButton text='Cancel' onClick={onCancel} />
+        <DialogButton text='Save' onClick={_onSaveClick(sourceText, onSave, setLastError)} isPrimary />
+      </DialogFooter>
+    </ModalDialog>
+  );*/
 
 export default EncounterConfigDialog;

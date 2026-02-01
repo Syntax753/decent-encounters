@@ -6,14 +6,16 @@ import LoadScreen from '@/loadScreen/LoadScreen';
 import TopBar from '@/components/topBar/TopBar';
 import Chat from "@/components/chat/Chat";
 import { TextConsoleLine } from "@/components/textConsole/TextConsoleBuffer";
-import { submitPrompt } from "./interactions/chat";
+import { submitPrompt, updateEncounter } from "./interactions/chat";
 import Encounter from "@/encounters/types/Encounter";
 import ContentButton from "@/components/contentButton/ContentButton";
+import EncounterConfigDialog from "./dialogs/EncounterConfigDialog";
 
 function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [lines, setLines] = useState<TextConsoleLine[]>([]);
   const [encounter, setEncounter] = useState<Encounter|null>(null);
+  const [modalDialogName, setModalDialogName] = useState<string|null>(null);
   
   useEffect(() => {
     if (isLoading) return;
@@ -34,8 +36,14 @@ function HomeScreen() {
         <Chat className={styles.chat} lines={lines} onChatInput={(prompt) => submitPrompt(prompt, setLines)} />
       </div>
       <div className={styles.encounterActions}>
-        <ContentButton onClick={() => {}} text="Configure Encounter" />
+        <ContentButton onClick={() => setModalDialogName(EncounterConfigDialog.name)} text="Configure Encounter" />
       </div>
+      <EncounterConfigDialog
+        isOpen={modalDialogName === EncounterConfigDialog.name}
+        encounter={encounter}
+        onCancel={() => setModalDialogName(null)}
+        onSave={(nextEncounter:Encounter) => { updateEncounter(nextEncounter, setEncounter, setModalDialogName, setLines); }}
+      />
     </div>
   );
 }

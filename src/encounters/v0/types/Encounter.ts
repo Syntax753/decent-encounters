@@ -7,7 +7,8 @@ type EncounterV0 = {
   model:string,
   startActions:Action[],
   instructionActions:Action[],
-  characterTriggers:CharacterTrigger[]
+  characterTriggers:CharacterTrigger[],
+  sourceText?:string
 }
 
 export default EncounterV0;

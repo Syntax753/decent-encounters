@@ -3,6 +3,7 @@ import TextConsoleBuffer from "@/components/textConsole/TextConsoleBuffer";
 import { isServingLocally } from "@/developer/devEnvUtil";
 import { findCharacterTriggerInText, stripTriggerCodes } from "@/encounters/encounterUtil";
 import Encounter from "@/encounters/types/Encounter";
+import Action from "@/encounters/v0/types/Action";
 import ActionType from "@/encounters/v0/types/ActionType";
 import { clearChatHistory, generate, isLlmConnected, setSystemMessage } from "@/llm/llmUtil";
 import { assertNonNullable } from "decent-portal";
@@ -13,52 +14,72 @@ const MAX_LINE_COUNT = 100;
 let theChatBuffer:TextConsoleBuffer|null = null;
 let theEncounter:Encounter|null = null;
 
-function _addUserLine(line:string, setLines:Function) {
-  if (!theChatBuffer) throw Error('Unexpected');
-  theChatBuffer.addLine(`${USER_PREFIX}${line}`);
-  setLines(theChatBuffer.lines);
+function _isLastLineGenerating():boolean {
+  assertNonNullable(theChatBuffer);
+  if (!theChatBuffer.lines.length) return false;
+  const lastLine = theChatBuffer.lines[theChatBuffer.lines.length - 1].text;
+  return lastLine.endsWith(GENERATING);
 }
 
-function _addGeneratingLine(setLines:Function) {
-  if (!theChatBuffer) throw Error('Unexpected');
-  theChatBuffer.addLine(GENERATING);
-  setLines(theChatBuffer.lines);
+function _addChatBufferLine(line:string) {
+  assertNonNullable(theChatBuffer);
+  if (_isLastLineGenerating()){
+    theChatBuffer.replaceLastLine(line);
+  } else {
+    theChatBuffer.addLine(line);
+  }
 }
 
-function _addNarrationLine(line:string, setLines:Function) {
-  if (!theChatBuffer) throw Error('Unexpected');
-  theChatBuffer.addLine(`${NARRATIVE_PREFIX}${line}`);
-  setLines(theChatBuffer.lines);
+function _addUserLine(line:string) {
+  assertNonNullable(theChatBuffer);
+  _addChatBufferLine(`${USER_PREFIX}${line}`);
+}
+
+function _addGeneratingLine() {
+  assertNonNullable(theChatBuffer);
+  _addChatBufferLine(GENERATING);
 }
 
 function _onUpdateResponse(responseText:string, setLines:Function) {
-  if (!theChatBuffer) throw Error('Unexpected');
+  assertNonNullable(theChatBuffer);
   const displayText = stripTriggerCodes(responseText);
-  theChatBuffer.replaceLastLine(`${displayText}${GENERATING}`);
-  setLines(theChatBuffer.lines);
+  _addChatBufferLine(`${displayText}${GENERATING}`);
+  setLines(theChatBuffer.lines)
 }
 
-function _finalizeResponse(responseText:string, setLines:Function) {
-  if (!theChatBuffer || !theEncounter) throw Error('Unexpected');
+function _handleActions(actions:Action[]):string {
+  assertNonNullable(theChatBuffer);
+  let systemMessage = '';
+  for(let i = 0; i < actions.length; ++i) {
+    const action = actions[i];
+    switch(action.actionType) {
+      case ActionType.DISPLAY_MESSAGE:
+        _addChatBufferLine(`${NARRATIVE_PREFIX}${action.payload}`);
+      break;
+      
+      case ActionType.INSTRUCTION_MESSAGE:
+        if (systemMessage.length) systemMessage += '\n';
+        systemMessage += action.payload;
+      break;
+    }
+  }
+  return systemMessage;
+}
+
+function _finalizeResponse(responseText:string) {
+  assertNonNullable(theChatBuffer);
+  assertNonNullable(theEncounter);
   const characterTrigger = findCharacterTriggerInText(responseText, theEncounter.characterTriggers);
   if (characterTrigger) {
-    const message = characterTrigger.actions[0].payload; // TODO - handle multiple actions
-    theChatBuffer.replaceLastLine(`${NARRATIVE_PREFIX}${message}`);
+    _handleActions(characterTrigger.actions);
   } else {
     const displayText = stripTriggerCodes(responseText);
-    theChatBuffer.replaceLastLine(displayText);
+    _addChatBufferLine(displayText);
   }
-  setLines(theChatBuffer.lines);
 }
 
 function _encounterToSystemMessage(encounter:Encounter):string {
-  let systemMessage = '';
-  for(let i = 0; i < encounter.instructionActions.length; ++i) {
-    const action = encounter.instructionActions[i];
-    if (action.actionType !== ActionType.INSTRUCTION_MESSAGE) continue;
-    if (i > 0) systemMessage += '\n';
-    systemMessage += action.payload;
-  }
+  let systemMessage = _handleActions(encounter.instructionActions);
   for(let i = 0; i < encounter.characterTriggers.length; ++i) {
     const { criteria, triggerCode } = encounter.characterTriggers[i];
     systemMessage += `\nIf ${criteria} then output @${triggerCode} and nothing else.`;
@@ -66,30 +87,35 @@ function _encounterToSystemMessage(encounter:Encounter):string {
   return systemMessage;
 }
 
-function _initForEncounter(encounter:Encounter, setLines:Function) {
+function _initForEncounter(encounter:Encounter) {
   assertNonNullable(theChatBuffer);
   theChatBuffer.clear();
   theEncounter = encounter;
   const systemMessage = _encounterToSystemMessage(encounter);
   setSystemMessage(systemMessage);
   clearChatHistory();
-  _addNarrationLine(encounter.startActions[0].payload, setLines); // TODO - handle 0 to many start actions instead of assuming one.
+  _handleActions(encounter.startActions);
 }
 
 export function initChat(encounter:Encounter, setLines:Function) {
   theChatBuffer = new TextConsoleBuffer(MAX_LINE_COUNT);
-  _initForEncounter(encounter, setLines);
+  _initForEncounter(encounter);
+  setLines(theChatBuffer.lines);
 }
 
 export function updateEncounter(encounter:Encounter, setEncounter:Function, setModalDialogName:Function, setLines:Function) {
+  assertNonNullable(theChatBuffer);
   setModalDialogName(null);
   setEncounter(encounter);
-  _initForEncounter(encounter, setLines);
+  _initForEncounter(encounter);
+  setLines(theChatBuffer.lines);
 }
 
 export async function submitPrompt(prompt:string, setLines:Function) {
-    _addUserLine(prompt, setLines);
-    _addGeneratingLine(setLines);
+    assertNonNullable(theChatBuffer);
+    _addUserLine(prompt);
+    _addGeneratingLine();
+    setLines(theChatBuffer.lines);
     try {
       if (!isLlmConnected()) { 
         const message = isServingLocally() 
@@ -98,8 +124,9 @@ export async function submitPrompt(prompt:string, setLines:Function) {
         console.error(message); // TODO toast
         return; 
       }
-      const fullResponseText = await generate(prompt, (responseText:string) => _onUpdateResponse(responseText, setLines));
-      _finalizeResponse(fullResponseText, setLines);
+      const fullResponseText = await generate(prompt, (responseText:string) => _onUpdateResponse(responseText, setLines) );
+      _finalizeResponse(fullResponseText);
+      setLines(theChatBuffer.lines);
     } catch(e) {
       console.error('Error while generating response.', e);
     }
