@@ -17,7 +17,6 @@ import LLMConnectionType from "./types/LLMConnectionType";
 import LLMMessages from "./types/LLMMessages";
 import StatusUpdateCallback from "./types/StatusUpdateCallback";
 import { webLlmConnect, webLlmGenerate } from "./webLlmUtil";
-import { getCachedPromptResponse, setCachedPromptResponse } from "./promptCache";
 
 const UNSPECIFIED_MODEL_ID = 'UNSPECIFIED';
 
@@ -100,12 +99,6 @@ export function clearChatHistory() {
 }
 
 export async function generate(prompt:string, onStatusUpdate:StatusUpdateCallback):Promise<string> {
-  const cachedResponse = getCachedPromptResponse(prompt); // If your app doesn't benefit from cached responses, just delete this block below.
-  if (cachedResponse) {
-    onStatusUpdate(cachedResponse, 100);
-    return cachedResponse;
-  }
-
   let firstResponseTime = 0;
   function _captureFirstResponse(status:string, percentComplete:number) {
     if (!firstResponseTime) firstResponseTime = Date.now();
@@ -122,7 +115,6 @@ export async function generate(prompt:string, onStatusUpdate:StatusUpdateCallbac
     default: throw Error('Unexpected');
   }
   updateModelDevicePerformanceHistory(theConnection.modelId, requestTime, firstResponseTime, Date.now(), _inputCharCount(prompt), message.length);
-  setCachedPromptResponse(prompt, message);
   theConnection.state = LLMConnectionState.READY;
   return message;
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import ModalDialog from "@/components/modalDialogs/ModalDialog";
 import DialogButton from "@/components/modalDialogs/DialogButton";
@@ -28,6 +28,12 @@ function EncounterConfigDialog(props:Props) {
   const { onCancel, onSave, isOpen, encounter } = props;
   const [sourceText, setSourceText] = useState<string>(encounter?.sourceText || '');
   const [lastError, setLastError] = useState<string>('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setSourceText(encounter?.sourceText || '');
+    setLastError('');
+  }, [encounter, isOpen]);
 
   if (!isOpen) return null;
 

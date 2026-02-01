@@ -10,6 +10,7 @@ import { submitPrompt, updateEncounter } from "./interactions/chat";
 import Encounter from "@/encounters/types/Encounter";
 import ContentButton from "@/components/contentButton/ContentButton";
 import EncounterConfigDialog from "./dialogs/EncounterConfigDialog";
+import { importEncounterFile } from "./interactions/import";
 
 function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -36,7 +37,11 @@ function HomeScreen() {
         <Chat className={styles.chat} lines={lines} onChatInput={(prompt) => submitPrompt(prompt, setLines)} />
       </div>
       <div className={styles.encounterActions}>
-        <ContentButton onClick={() => setModalDialogName(EncounterConfigDialog.name)} text="Configure Encounter" />
+        <ContentButton onClick={() => setModalDialogName(EncounterConfigDialog.name)} text="Edit Encounter" />
+        <ContentButton onClick={async () => { 
+          const nextEncounter = await importEncounterFile();
+          if (nextEncounter) updateEncounter(nextEncounter, setEncounter, setModalDialogName, setLines);
+        }} text="Import" />
       </div>
       <EncounterConfigDialog
         isOpen={modalDialogName === EncounterConfigDialog.name}

@@ -1,6 +1,8 @@
 export const MIMETYPE_AUDIO_WAV = 'audio/wav';
 export const MIMETYPE_GIF = 'image/gif';
 export const MIMETYPE_JPEG = 'image/jpeg';
+export const MIMETYPE_ENCOUNTER_MARKDOWN = 'text/encounter+markdown';
+export const MIMETYPE_MARKDOWN = 'text/markdown';
 export const MIMETYPE_OCTET_STREAM = 'application/octet-stream';
 export const MIMETYPE_PLAIN_TEXT = 'text/plain';
 export const MIMETYPE_SVG = 'image/svg+xml';
@@ -20,6 +22,8 @@ const MIMETYPE_TO_EXTENSION_MAP:MimeTypeToExtensionMap = {
   [MIMETYPE_AUDIO_WAV]: 'wav',
   [MIMETYPE_GIF]: 'gif',
   [MIMETYPE_JPEG]: 'jpg',
+  [MIMETYPE_ENCOUNTER_MARKDOWN]: 'enc.md',
+  [MIMETYPE_MARKDOWN]: 'md',
   [MIMETYPE_OCTET_STREAM]: 'bin',
   [MIMETYPE_PLAIN_TEXT]: 'txt',
   [MIMETYPE_PNG]: 'png',
