@@ -11,6 +11,7 @@ import Encounter from "@/encounters/types/Encounter";
 import ContentButton from "@/components/contentButton/ContentButton";
 import EncounterConfigDialog from "./dialogs/EncounterConfigDialog";
 import { importEncounterFile } from "./interactions/import";
+import { downloadEncounter } from "./interactions/export";
 
 function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -37,11 +38,13 @@ function HomeScreen() {
         <Chat className={styles.chat} lines={lines} onChatInput={(prompt) => submitPrompt(prompt, setLines)} />
       </div>
       <div className={styles.encounterActions}>
-        <ContentButton onClick={() => setModalDialogName(EncounterConfigDialog.name)} text="Edit Encounter" />
+        <h1>Encounter</h1>
+        <ContentButton onClick={() => setModalDialogName(EncounterConfigDialog.name)} text="Edit" />
         <ContentButton onClick={async () => { 
           const nextEncounter = await importEncounterFile();
           if (nextEncounter) updateEncounter(nextEncounter, setEncounter, setModalDialogName, setLines);
         }} text="Import" />
+        <ContentButton onClick={() => downloadEncounter(encounter)} text="Download" />
       </div>
       <EncounterConfigDialog
         isOpen={modalDialogName === EncounterConfigDialog.name}

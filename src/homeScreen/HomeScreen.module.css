@@ -75,4 +75,21 @@
 
 .encounterActions {
   grid-area: right-panel;
+  background-color: #f2f2f2;
+  height: fit-content;
+  padding: 1vh;
+  border-top-left-radius: 1vh;
+  border-bottom-left-radius: 1vh;
+  border-color: #aaa;
+  border-width: .2vh;
+  border-style: solid;
+  border-right-style: none;;
+}
+
+.encounterActions > h1 {
+  font-size: 1.5vh;
+  text-align: center;
+  color: #888;
+  margin-bottom: 1vh;
+  
 }
