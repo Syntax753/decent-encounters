@@ -1,8 +1,6 @@
 # Encounters
 
-This is a placeholder README.md for Encounters.
-
-What does Encounters do? I have no idea. It will be up to you, the developer of Encounters, to describe it.
+This is an app for testing out conversations with an LLM-based character. The encounter format allows specifying grounding instructions for the LLM, detecting conditions with the LLM, and updating state variables that affect the instructions.
 
 ## Licensing
 
@@ -12,84 +10,75 @@ The fonts are hosted from decentapps.net rather than included in this repo. Thei
 
 ## Support
 
-Tell your users where to go. 
-
-I mean... to file bugs! An easy thing is to send them to a Github issues page.
-
-## Contact
-
-Give your users some way to contact you or your organization. 
+Github issues can be filed here.
+https://github.com/DecentAppsNet/encounters/issues
 
 ## Community
 
-Point your users to some public forum. Then they will be able to join forces to more effectively complain about your work! If you'd like a channel for your app on the [Encounterss Discord server](https://discord.gg/kkp3x4X2Vb), just ask - we can probably do it. The channel would be named "Encounters". And what do people in that channel talk about? Encounters, of course.
+Encounters is a Decent App, which is a kind of web app that sends no user data to a server, using all local capabilities. You can find users of Encounters and other Decent Apps on the [Decent Apps Discord server](https://discord.gg/kkp3x4X2Vb).
 
+# Encounters Format
 
+An encounter file defines how a character will act when speaking with the player. It is based on the markdown format. You can import and export encounter files to share encounters with other people.
 
+Sections in an Encounters file are:
+* General - general settings applicable to the encounter
+* Start - messages that will display and code that will be run once at the start of the encounter
+* Instructions - instructions that will be used to ground the LLM
 
+Possible actions are:
 
+**Instruction messages are used for grounding the LLM, and aren't visible to the player.**
+_Narration messages display to the player but are not part of chat history that the LLM accesses._
+> Character messages are displayed to the player as dialogue spoken by the character. They are also part of chat history that the LLM accesses.
+>> Player messages are displayed to the player as though spoken by the character they control. They are also part of chat history that the LLM accesses.
+`Code blocks contain Javascript-like code that executes`
+* name=value (a way of specifying settings)
 
+If a line is not preceded by one of the line start characters described above, it will be treated as a comment. In other words, that text will not affect the encounter behavior in any way, but can be used to explain what is going on inside of the encounter file.
 
-# Developer Guide (Delete After You Don't Need It)
+Any of the messages may optional contain a conditional code block with an expresssion. If the expression evaluates as true, the message will be displayed/included. In the example below, a narration message will only be displayed if the variable `isHappy` has been set to true:
+_`isHappy` The troll smiles a toothy grin, pleased to be in your company._
 
-The content preceding this section might be things you want to keep and revise for users of your app to see. But this section is for you, the developer. If you're feeling super-confident, you could just delete it all now. Do it, you smug puppy!
+## General Section
 
-## Running Encounters during Development
+Name/value pairs are evaluated. Other kinds of actions are ignored.
 
-1. Change your working directory to the project root (folder this file is in).
-2. `npm install`
-3. `npm run dev`
-4. Browse to http://localhost:3000/ or whatever URL is shown in the output of the previous command.
+* title=The Troll Bridge (a display name describing the encounter)
+* model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k (the model that the encounter was designed to use. Used for giving a warning to player if the model doesn't match.)
 
-## What You Have Now
+## Start Section
 
-The unmodified template installed for Encounters includes these screens:
+Character/player/narration messages and code blocks are evaluated. Other kinds of actions are ignored.
 
-* A loading screen that will show progress loading model into browser via WebLLM.
-* A home screen that lets you send a simple prompt to a local LLM. Arriving to the home screen without an LLM connection will redirect to the loading screen. This redirection will be confirmed with a dialog if you are serving locally. This is to avoid excessive LLM reloading triggered by code changes during development.
+This section is evaluated once per play session for the encounter.
 
-The dependencies are minimal: (see package.json)
+## Instructions Section
 
-* webllm - For web-based LLM inference.
-* dev dependencies for Vite/Typescript (build tooling), Vitest (test runner)
+Instruction messages and code blocks are evaluated. Other kinds of actions are ignored.
 
-There is no monolithic dev-dependency package to install and upgrade. You are in charge of updating and revising your dependencies in the way you like.
+This section is evaluated each time the player enters a prompt to generate a new system message sent to the LLM. If instruction messages contain conditional code blocks, it is possible for the system message to be different after each prompt.
 
-## Removing and Changing Unwanted Things
+## Condition Sections (Appearing Under Instructions)
 
-The template isn't a framework. It's just a reasonable starting point for a certain kind of web app. You should be able to make changes to match your preferences fairly easily. Rather than presenting you with a bunch of configuration options that manipulate a black box, you can just delete or rewrite code more directly.
+Character/player/narration messages and code blocks are evaluated. Other kinds of actions are ignored.
 
-Following this sensibility, things like the LLM wrapper, widgets, and persistence functionality are in-lined into the project rather than kept as dependencies in packages. This practice is sometimes called "vendoring". The basic rationale is that sometimes it's a better to spend time understanding and writing code rather than maintaining the sprawl of a thousand or more packages. These decisions have tradeoffs, but I prefer to set the balance towards low-dependency development.
+You can optionally define conditions that the LLM will detect along with actions to perform when that condition is met. These appear as sub-sections under the "Instructions" section. The name of the sub-section is the condition that the LLM will attempt to detect after the player sends a prompt.
 
-## PWA Support
+```
+## user gives you a compliment
+_The troll blushes at your compliment._
+`isHappy=true`
+```
 
-You'll see a little bit of extra code for PWA support - the service worker registration and a manifest.json file. If this is unwelcome complexity, feel free to delete it. But it does give you and your users an ability to install the web app locally as an app that can run fully offline.
+You can have as many conditions as you want, but probably want to keep it under ten for more reliable condition detection from the LLM. 
 
-## Changing LLM Models
+A conditional code block can be included in the section name so that the condition is only actively checked when the conditional expression evaluates as true.
 
-You can configure the supported models in `/public/app-manifest.json` to the models you would like your app to support. It's reasonable to only support one model, since your prompts and other behavior may be coupled to a single model. But adding more models can give your users options for varied device capabilities.
+```
+## `!isHappy` user gives you a compliment
+_The troll blushes at your compliment._
+`isHappy=true`
+```
 
-## Key Folders and Files
-
-* index.html - top-level index.html that will be deployed to web root.
-* src/ - root for all source that is built into the bundle.
-  * common/ - Kitchen-sink folder for small utility modules and other source that doesn't merit grouping under a more general concept.
-  * init/ - location for any source files called as part of initialiation.
-  * developer/ - code that is really only meant to run at dev time - testing tools, profiling, backdoors.
-  * llm/ - client access and other utilities around LLM. llmUtil.ts has top-level functions for calling an inference interface provided by WebLLM.
-  * persistence/ - utilities around persisting data in IndexedDb in a key/document style with capability of importing/exporting documents as files.
-  * loadScreen/ - screen that loads the chosen LLM model locally and shows progress.
-  * homeScreen/ - screen that is arrived at after loading completes. In the template, this screen has a basic LLM chat interface that can be replaced.
-* public/ - files and folders that will be web-accessible in the folder that built bundles and index.html are deployed to.
-
-## Source Conventions
-
-You can depart from the conventions below if you don't like them. I include them as an explanation for the starting files, and you are invited to continue the conventions if you want.
-
-* A "screen" is just a cluster of self-contained UI that renders over the entire client rect.
-* Each screen function uses React hooks for state management and tends to be the top-level of state passing down to sub-components through props.
-* The screen function calls an `init()` function when it mounts which can also instance module-scope variables as additional state.
-* Any state that is intended to be shared between screens is persisted using `/src/persistence/pathStore`. There is no need for an in-memory store (e.g. Redux) with this approach. And if you persist all data needed to initialize a screen, it effectively creates a saved session that a user can return to on the same device. That saved state is also exportable and importable (useful for backing up or transferring data between devices).
-* If functionality is tied to one screen, keep source for it under the corresponding screen folder.
-* If functionality is common to multiple screens and has more than one source file, create a new folder under `/src` for it.
-* Otherwise, common functionality can go in a source file under `/common`.
+By default, conditions are no longer evaluated once they have been triggered. But if you add a conditional code block, it will override this "trigger once" behavior.

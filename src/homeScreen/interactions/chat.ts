@@ -1,14 +1,17 @@
+import { assertNonNullable } from "decent-portal";
+
 import { NARRATION_PREFIX, PLAYER_PREFIX } from "@/components/chat/ChatHistory";
 import TextConsoleBuffer from "@/components/textConsole/TextConsoleBuffer";
 import { isServingLocally } from "@/developer/devEnvUtil";
-import { findCharacterTriggerInText, stripTriggerCodes } from "@/encounters/encounterUtil";
+import { enableConditionalCharacterTriggers, findCharacterTriggerInText, stripTriggerCodes } from "@/encounters/encounterUtil";
 import Encounter from "@/encounters/types/Encounter";
 import Action, { MessageAction } from "@/encounters/v0/types/Action";
 import ActionType from "@/encounters/v0/types/ActionType";
 import { addAssistantMessage, addUserMessage, clearChatHistory, generate, isLlmConnected, setSystemMessage } from "@/llm/llmUtil";
 import { executeCode } from "@/spielCode/codeUtil";
-import VariableManager from "@/spielCode/VariableManager";
-import { assertNonNullable } from "decent-portal";
+import VariableManager, { VariableCollection } from "@/spielCode/VariableManager";
+
+// TODO - at some point, refactor the encounter-specific logic into encounterUtil or a different module that is uncoupled to input, display, and LLM.
 
 export const GENERATING = '...';
 const MAX_LINE_COUNT = 100;
@@ -64,10 +67,10 @@ function _actionCriteriaMet(action:MessageAction):boolean {
   if (!action.criteria) return true;
   assertNonNullable(theSessionVariables); 
   executeCode(action.criteria, theSessionVariables);
-  return theSessionVariables.get('result') === true;
+  return theSessionVariables.get('__result') === true;
 }
 
-function _handleActions(actions:Action[]):string {
+function _handleActions(actions:Action[]):string { // TODO factor out of this module. See comments at top.
   assertNonNullable(theChatBuffer);
   let systemMessage = '';
   for(let i = 0; i < actions.length; ++i) {
@@ -113,6 +116,7 @@ function _finalizeResponse(responseText:string) {
   assertNonNullable(theEncounter);
   const characterTrigger = findCharacterTriggerInText(responseText, theEncounter.characterTriggers);
   if (characterTrigger) {
+    characterTrigger.isEnabled = false; // Prevent the same trigger from firing again in the future, unless it's re-enabled by the encounter's logic.
     _handleActions(characterTrigger.actions);
   } else {
     const displayText = stripTriggerCodes(responseText);
@@ -120,10 +124,14 @@ function _finalizeResponse(responseText:string) {
   }
 }
 
-function _encounterToSystemMessage(encounter:Encounter):string {
+function _encounterToSystemMessage(encounter:Encounter):string { // TODO factor out of this module. See comments at top.
+  assertNonNullable(theEncounter);
+  assertNonNullable(theSessionVariables);
+  enableConditionalCharacterTriggers(theEncounter.characterTriggers, theSessionVariables);
   let systemMessage = _handleActions(encounter.instructionActions);
   for(let i = 0; i < encounter.characterTriggers.length; ++i) {
-    const { criteria, triggerCode } = encounter.characterTriggers[i];
+    const { criteria, triggerCode, isEnabled } = encounter.characterTriggers[i];
+    if (!isEnabled) continue;
     systemMessage += `\nIf ${criteria} then output @${triggerCode} and nothing else.`;
   }
   return systemMessage;
@@ -140,10 +148,21 @@ function _initForEncounter(encounter:Encounter) {
   _handleActions(encounter.startActions);
 }
 
+function _updateSystemMessageForEncounter() {
+  assertNonNullable(theEncounter);
+  assertNonNullable(theSessionVariables);
+  const systemMessage = _encounterToSystemMessage(theEncounter);
+  setSystemMessage(systemMessage);
+}
+
 export function initChat(encounter:Encounter, setLines:Function) {
   theChatBuffer = new TextConsoleBuffer(MAX_LINE_COUNT);
   _initForEncounter(encounter);
   setLines(theChatBuffer.lines);
+}
+
+export function getVariables():VariableCollection {
+  return !theSessionVariables ? {} : theSessionVariables.toCollection();
 }
 
 export function updateEncounter(encounter:Encounter, setEncounter:Function, setModalDialogName:Function, setLines:Function) {
@@ -160,11 +179,12 @@ export function restartEncounter(encounter:Encounter, setLines:Function) {
   setLines(theChatBuffer.lines);
 }
 
-export async function submitPrompt(prompt:string, setLines:Function) {
+export async function submitPrompt(prompt:string, setLines:Function) { // TODO factor out of this module. See comments at top.
     assertNonNullable(theChatBuffer);
     _addPlayerLine(prompt);
     _addGeneratingLine();
     setLines(theChatBuffer.lines);
+    _updateSystemMessageForEncounter();
     try {
       if (!isLlmConnected()) { 
         const message = isServingLocally() 

@@ -3,6 +3,8 @@ import { majorVersion, parseVersion } from "./versionUtil";
 import { textToEncounter } from "./v0/readerUtil";
 import { baseUrl } from "@/common/urlUtil";
 import CharacterTrigger from "./v0/types/CharacterTrigger";
+import VariableManager from "@/spielCode/VariableManager";
+import { executeCode } from "@/spielCode/codeUtil";
 
 export function findCharacterTriggerInText(responseText:string, characterTriggers:CharacterTrigger[]):CharacterTrigger|null {
   if (!characterTriggers.length) return null;
@@ -12,7 +14,9 @@ export function findCharacterTriggerInText(responseText:string, characterTrigger
     if (pos === -1) return null;
     const triggerCode = responseText[pos+1];
     for(let triggerI = 0; triggerI < characterTriggers.length; ++triggerI) {
-      if (triggerCode === characterTriggers[triggerI].triggerCode) return characterTriggers[triggerI];
+      const trigger = characterTriggers[triggerI];
+      if (!trigger.isEnabled) continue;
+      if (triggerCode === trigger.triggerCode) return trigger;
     }
     ++pos;
   }
@@ -47,4 +51,13 @@ export async function loadEncounter(encounterUrl:string):Promise<Encounter> {
   if (!response.ok) throw Error(`Failed to load encounter from URL: ${encounterUrl}`);
   const text = await response.text();
   return _textToEncounter(text);
+}
+
+export async function enableConditionalCharacterTriggers(characterTriggers:CharacterTrigger[], sessionVariables:VariableManager) {
+  for(let i = 0; i < characterTriggers.length; ++i) {
+    const trigger = characterTriggers[i];
+    if (trigger.enabledCriteria === null) continue;
+    executeCode(trigger.enabledCriteria, sessionVariables);
+    trigger.isEnabled = sessionVariables.get('__result');
+  }
 }
