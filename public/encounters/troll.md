@@ -21,7 +21,6 @@ _As you attempt to cross a bridge, a troll emerges from beneath it, blocking you
 
 > Oy, greasy cutlet, answer me this - what is my favorite color?
 `challengeGiven=true`
-!!
 
 ## `!bested && challengeGiven` user guesses that your favorite color is brown
 
