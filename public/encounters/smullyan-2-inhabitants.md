@@ -14,8 +14,6 @@ _You meet two inhabitants, Al and Berta, standing in front of a closed door._
 **Knights always tell the truth.**
 **Knaves always lie.** 
 **There are 2 characters, Al and Berta.**
-`alIsKnight=false`
-`bertaIsKnight=true`
 
 ## user talks to Al
 

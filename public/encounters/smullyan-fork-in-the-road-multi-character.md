@@ -9,9 +9,6 @@
 _You arrive at a fork in the path_
 _Two natives - Alpha and Bet - sit in the shade of the tree, watching over the the path. One is a knight and one is a knave._
 _You are only allowed to ask single yes-or-no question to determine which path leads to the City of Knights._
-`questionPosed=false`
-`alphaIsKnight=true`
-`betIsKnight=false`
 
 # Instructions
 
