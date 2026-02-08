@@ -7,20 +7,6 @@ Not all of this is true. Thinking ahead a bit.
 All statements in the "Syntax Guide" section will not affect the encounter. It is here for reference. Feel free to delete.
 
 ## Message Types
-These are the two main message types used:
-
-_text that will be displayed in chat window, but not included in chat history_ 
-(useful for telling the user about things that happened which are narration outside of dialogue. Not included in chat history because it can confuse the LLM)
-
-*text that will be included in the system message* 
-(only used in the "Instructions" section)
-
-There are some additional message types used less frequently:
-
->text that will be included in chat history as an assistant message but not displayed. (useful for n-shot and RAG)
->_text that will be included in chat history as an assistant message and also displayed._ (useful for story events that require the LLM character to say something specific)
->>text that will be included in chat history as a user message but not displayed. (useful for n-shot)
->>_text that will be included in chat history as a user message and also be displayed._ (useful for story events that require the user to say something specific)
 
 
 *Instruction message* - hidden instructions for the encounter. (LLM grounding, no chat window)
@@ -28,8 +14,6 @@ There are some additional message types used less frequently:
 _Narration message_ - message that explains the encounter but is not spoken by any character. (chat window, but not history)
 > Character message - message that character says in the context of the story. (chat window and history)
 >> Player message - message that player's character says. (chat window and history)
-
-
 
 A boolean expression can be evaluated at the start of a message. If the value is falsy, the message will be omitted.
 
@@ -71,8 +55,6 @@ _As you attempt to cross a bridge, a troll emerges from beneath it, blocking you
 **`!playerScared` You are a troll guarding a bridge.**
 **`playerScared` You are a troll hiding under the bridge to avoid further scaring the user.**
 **All of your responses should be less than 20 words long.**
->>I want to cross the bridge.
->Then tell me something I've never heard of.
 
 ## user describes something you've never heard of before
 

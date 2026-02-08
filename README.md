@@ -37,8 +37,11 @@ _Narration messages display to the player but are not part of chat history that 
 
 If a line is not preceded by one of the line start characters described above, it will be treated as a comment. In other words, that text will not affect the encounter behavior in any way, but can be used to explain what is going on inside of the encounter file.
 
-Any of the messages may optional contain a conditional code block with an expresssion. If the expression evaluates as true, the message will be displayed/included. In the example below, a narration message will only be displayed if the variable `isHappy` has been set to true:
+Any of the messages may optionally contain a conditional code block with an expresssion. If the expression evaluates as true, the message will be displayed/included. In the example below, a narration message will only be displayed if the variable `isHappy` has been set to true:
 _`isHappy` The troll smiles a toothy grin, pleased to be in your company._
+
+Any message may have one or more alternate texts delimited with "|". At time of evaluation, one of message texts will be chosen randomly. This technique can be used to add more variety.
+_The troll smiles a toothy grin, pleased to be in your company.|The troll beams at you, his new best friend.|The troll is quite happy. He might give you a hug, if you're not careful._
 
 ## General Section
 

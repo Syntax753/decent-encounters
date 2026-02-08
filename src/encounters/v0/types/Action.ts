@@ -1,27 +1,28 @@
 import Code from "@/spielCode/types/Code";
 import ActionType from "./ActionType";
+import MessageSet from "./MessageSet";
 
 export type DisplayMessageAction = {
   actionType:ActionType.NARRATION_MESSAGE;
-  message:string;
+  messages:MessageSet;
   criteria:Code|null;
 }
 
 export type InstructionMessageAction = {
   actionType:ActionType.INSTRUCTION_MESSAGE;
-  message:string;
+  messages:MessageSet;
   criteria:Code|null;
 }
 
 export type PlayerMessageAction = {
   actionType:ActionType.PLAYER_MESSAGE;
-  message:string;
+  messages:MessageSet;
   criteria:Code|null;
 }
 
 export type CharacterMessageAction = {
   actionType:ActionType.CHARACTER_MESSAGE;
-  message:string;
+  messages:MessageSet;
   criteria:Code|null;
 }
 

@@ -8,6 +8,7 @@ import CharacterTrigger from "./types/CharacterTrigger";
 import { parseVersion } from "../versionUtil";
 import { textToCode } from "@/spielCode/codeUtil";
 import Code from "@/spielCode/types/Code";
+import MessageSet from "./types/MessageSet";
 
 function _stripEnclosers(text:string, enclosingText:string):string {
   text = text.trim();
@@ -17,22 +18,28 @@ function _stripEnclosers(text:string, enclosingText:string):string {
     : text.substring(enclosingText.length).trim();
 }
 
-function _parseConditionalCodeBlock(line:string):{message:string, criteria:Code|null} {
+function _parseCriteriaFromMessageLine(line:string):{lineWithoutCriteria:string, criteria:Code|null} {
   const startPos = line.indexOf('`');
-  if (startPos === -1) return {message:line, criteria:null};
+  if (startPos === -1) return {lineWithoutCriteria:line, criteria:null};
   const endPos = line.indexOf('`', startPos+1);
-  if (endPos === -1) return {message:line, criteria:null};
+  if (endPos === -1) return {lineWithoutCriteria:line, criteria:null};
   if (line.indexOf('`', endPos+1) !== -1) throw Error('Multiple code blocks found in message line - only one allowed.');
   const codeText = `__result=${line.substring(startPos+1, endPos)}`; // "__result=" - converts the concise expression format to a statement.
-  const message = `${line.substring(0, startPos - 1)}${line.substring(endPos+1)}`.trim();
+  const lineWithoutCriteria = `${line.substring(0, startPos - 1)}${line.substring(endPos+1)}`.trim();
   const criteria = textToCode(codeText);
-  return {message, criteria};
+  return {lineWithoutCriteria, criteria};
+}
+
+function _parseMessageLine(line:string):{messages:MessageSet, criteria:Code|null} {
+  const {lineWithoutCriteria, criteria} = _parseCriteriaFromMessageLine(line);
+  const messages = lineWithoutCriteria.split('|').map(msg => msg.trim()).filter(msg => msg.length > 0);
+  return {messages:new MessageSet(messages), criteria};
 }
 
 function _parseMessageAction(line:string, encloser:string, actionType:ActionType):Action {
   line = _stripEnclosers(line, encloser);
-  const {message, criteria} = _parseConditionalCodeBlock(line);
-  return { actionType, message, criteria } as Action;
+  const {messages, criteria} = _parseMessageLine(line);
+  return { actionType, messages, criteria } as Action;
 }
 
 function _parseCodeAction(line:string):CodeAction {
@@ -68,8 +75,9 @@ function _parseStartSection(startSection?:string):Action[] {
 }
 
 function _parseTriggerSectionName(triggerSectionName:string):{criteria:string, enabledCriteria:Code|null} {
-  const {message, criteria} = _parseConditionalCodeBlock(triggerSectionName);
-  return {criteria:message, enabledCriteria:criteria};
+  const {messages, criteria} = _parseMessageLine(triggerSectionName);
+  if (messages.count > 1) throw Error('Multiple messages found in trigger section name - only one allowed.');
+  return {criteria:messages.nextMessage(), enabledCriteria:criteria};
 }
 
 function _parseTriggerSection(triggerSectionName:string, triggerCode:string, triggerSection:string):CharacterTrigger {

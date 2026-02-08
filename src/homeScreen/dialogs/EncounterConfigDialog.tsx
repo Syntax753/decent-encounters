@@ -50,17 +50,4 @@ function EncounterConfigDialog(props:Props) {
   );
 }
 
-/*
-return (
-    <ModalDialog isOpen={isOpen} title='Configure Encounter'>
-      
-      <p>{lastError}</p>
-      
-      <DialogFooter>
-        <DialogButton text='Cancel' onClick={onCancel} />
-        <DialogButton text='Save' onClick={_onSaveClick(sourceText, onSave, setLastError)} isPrimary />
-      </DialogFooter>
-    </ModalDialog>
-  );*/
-
 export default EncounterConfigDialog;

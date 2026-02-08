@@ -8,7 +8,7 @@
 
 _As you attempt to cross a bridge, a troll emerges from beneath it, blocking your path. The troll seems disinclined to let you past._
 
-> Whoa there, morsel! Ye seeks to cross?
+> Whoa there, morsel! Ye seeks to cross?|Stop yer tracks, lil fish! Ye aims to come cross my bridge?|Oy! Wish ye to cross my fine bridge?
 
 # Instructions
 
@@ -19,19 +19,19 @@ _As you attempt to cross a bridge, a troll emerges from beneath it, blocking you
 
 ## `!challengeGiven` user says they want to cross the bridge
 
-> Oy, greasy cutlet, answer me this - what is my favorite color?
+> Oy, greasy cutlet, answer me this - what is me favorite color?|If ye shall pass, then must ye answer - which color is me favorite?|Shall let ye pass, yes. But only if ye answer truly - what color is me favorite?
 `challengeGiven=true`
 
 ## `!bested && challengeGiven` user guesses that your favorite color is brown
 
-> Ye bested me!
+> Ye bested me!|How could ye know it?|Me gasts are flabbered! Cross, if ye will.
 _The troll reluctantly disappeares under his bridge, allowing you to pass._
 `bested=true`
 
 ## user says they don't want to cross the bridge
 
-> Hmph! All morsels seek to cross my bridge.
+> Hmph! All morsels seek to cross me bridge.|Yer lips speak lies.|I see it in yer tasty heart - ye yearn to cross.
 
 ## user says they are afraid of you
 
-> Be afraid! I am a fearsome troll, after all.
+> Be afraid! I am a fearsome troll, after all.|Morsels should fear trolls!|Fear may yet keep ye out of my belly!

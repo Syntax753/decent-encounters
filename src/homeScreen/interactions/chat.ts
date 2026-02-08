@@ -77,25 +77,29 @@ function _handleActions(actions:Action[]):string { // TODO factor out of this mo
     const action = actions[i];
     switch(action.actionType) {
       case ActionType.NARRATION_MESSAGE:
-        if (_actionCriteriaMet(action)) _addNarrationLine(action.message);
+        if (_actionCriteriaMet(action)) _addNarrationLine(action.messages.nextMessage());
       break;
 
       case ActionType.CHARACTER_MESSAGE:
-        if (!_actionCriteriaMet(action)) break; 
-        _addCharacterLine(action.message);
-        addAssistantMessage(action.message);
+        if (_actionCriteriaMet(action)) {
+          const message = action.messages.nextMessage();
+          _addCharacterLine(message);
+          addAssistantMessage(message);
+        }
       break;
 
       case ActionType.PLAYER_MESSAGE:
-        if (!_actionCriteriaMet(action)) break; 
-        _addPlayerLine(action.message);
-        addUserMessage(action.message);
+        if (_actionCriteriaMet(action)) {
+          const message = action.messages.nextMessage();
+          _addPlayerLine(message);
+          addUserMessage(message);
+        }
       break;
       
       case ActionType.INSTRUCTION_MESSAGE:
         if (_actionCriteriaMet(action)) {
           if (systemMessage.length) systemMessage += '\n';
-          systemMessage += action.message;
+          systemMessage += action.messages.nextMessage();
         }
       break;
 
