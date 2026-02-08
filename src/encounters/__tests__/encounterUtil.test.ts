@@ -4,28 +4,36 @@ import CharacterTrigger from '../v0/types/CharacterTrigger';
 describe('encounterUtil', () => {
   describe('findCharacterTriggerInText()', () => {
     it('should find no triggers in empty string', () => {
-      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+      const characterTriggers:CharacterTrigger[] = [
+        {'triggerCode':'1', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}, 
+        {'triggerCode':'2', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}];
       const text = "";
       const trigger = findCharacterTriggerInText(text, characterTriggers);
       expect(trigger).toBeNull();
     });
 
     it('should find no triggers in string with no codes', () => {
-      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+      const characterTriggers:CharacterTrigger[] = [
+        {'triggerCode':'1', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}, 
+        {'triggerCode':'2', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}];
       const text = "hi";
       const trigger = findCharacterTriggerInText(text, characterTriggers);
       expect(trigger).toBeNull();
     });
 
     it('should find no triggers in string with just a @', () => {
-      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+      const characterTriggers:CharacterTrigger[] = [
+        {'triggerCode':'1', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}, 
+        {'triggerCode':'2', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}];
       const text = "hi@";
       const trigger = findCharacterTriggerInText(text, characterTriggers);
       expect(trigger).toBeNull();
     });
 
     it('should find no triggers in string if code does not match a trigger', () => {
-      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+      const characterTriggers:CharacterTrigger[] = [
+        {'triggerCode':'1', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}, 
+        {'triggerCode':'2', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}];
       const text = "hi@3";
       const trigger = findCharacterTriggerInText(text, characterTriggers);
       expect(trigger).toBeNull();
@@ -39,35 +47,45 @@ describe('encounterUtil', () => {
     });
 
     it('finds trigger by itself', () => {
-      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+      const characterTriggers:CharacterTrigger[] = [
+        {'triggerCode':'1', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}, 
+        {'triggerCode':'2', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}];
       const text = "@1";
       const trigger = findCharacterTriggerInText(text, characterTriggers);
       expect(trigger?.triggerCode).toBe('1');
     });
 
     it('finds trigger at beginning of text', () => {
-      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+      const characterTriggers:CharacterTrigger[] = [
+        {'triggerCode':'1', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}, 
+        {'triggerCode':'2', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}];
       const text = "@1Text";
       const trigger = findCharacterTriggerInText(text, characterTriggers);
       expect(trigger?.triggerCode).toBe('1');
     });
 
     it('finds triggers at end of text', () => {
-      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+      const characterTriggers:CharacterTrigger[] = [
+        {'triggerCode':'1', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}, 
+        {'triggerCode':'2', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}];
       const text = "Text@1";
       const trigger = findCharacterTriggerInText(text, characterTriggers);
       expect(trigger?.triggerCode).toBe('1');
     });
 
     it('finds trigger in middle of text', () => {
-     const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+     const characterTriggers:CharacterTrigger[] = [
+      {'triggerCode':'1', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}, 
+      {'triggerCode':'2', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}];
       const text = "Text@1Text";
       const trigger = findCharacterTriggerInText(text, characterTriggers);
       expect(trigger?.triggerCode).toBe('1');
     });
 
     it('finds trigger if code has two @', () => {
-      const characterTriggers:CharacterTrigger[] = [{'triggerCode':'1', criteria:'', actions:[]}, {'triggerCode':'2', criteria:'', actions:[]}];
+      const characterTriggers:CharacterTrigger[] = [
+        {'triggerCode':'1', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}, 
+        {'triggerCode':'2', criteria:'', actions:[], isEnabled:true, enabledCriteria:null}];
       const text = "Text@@1Text";
       const trigger = findCharacterTriggerInText(text, characterTriggers);
       expect(trigger?.triggerCode).toBe('1');
