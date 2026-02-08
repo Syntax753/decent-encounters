@@ -1,4 +1,4 @@
-import  exampleText from './encounterExample';
+import exampleText from './encounterExample';
 import { textToEncounter } from '../readerUtil';
 import ActionType from '../types/ActionType';
 import { DisplayMessageAction, InstructionMessageAction } from '../types/Action';
@@ -42,5 +42,6 @@ describe('readerUtil', () => {
     a = c.actions[0];
     expect(a.actionType).toBe(ActionType.NARRATION_MESSAGE);
     expect((a as DisplayMessageAction).message).toBe('The troll reluctantly allows you to pass. Victory!');
+    expect(encounter.characterTriggers[1].actions[0].actionType).toBe(ActionType.RESTART_TURN);
   });
 });

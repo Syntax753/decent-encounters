@@ -3,7 +3,8 @@ enum ActionType {
   CHARACTER_MESSAGE,
   PLAYER_MESSAGE,
   INSTRUCTION_MESSAGE,
-  CODE
+  CODE,
+  RESTART_TURN
 }
 
 export default ActionType;

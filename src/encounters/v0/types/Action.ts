@@ -2,36 +2,40 @@ import Code from "@/spielCode/types/Code";
 import ActionType from "./ActionType";
 
 export type DisplayMessageAction = {
-  actionType:ActionType.NARRATION_MESSAGE;
-  message:string;
-  criteria:Code|null;
+  actionType: ActionType.NARRATION_MESSAGE;
+  message: string;
+  criteria: Code | null;
 }
 
 export type InstructionMessageAction = {
-  actionType:ActionType.INSTRUCTION_MESSAGE;
-  message:string;
-  criteria:Code|null;
+  actionType: ActionType.INSTRUCTION_MESSAGE;
+  message: string;
+  criteria: Code | null;
 }
 
 export type PlayerMessageAction = {
-  actionType:ActionType.PLAYER_MESSAGE;
-  message:string;
-  criteria:Code|null;
+  actionType: ActionType.PLAYER_MESSAGE;
+  message: string;
+  criteria: Code | null;
 }
 
 export type CharacterMessageAction = {
-  actionType:ActionType.CHARACTER_MESSAGE;
-  message:string;
-  criteria:Code|null;
+  actionType: ActionType.CHARACTER_MESSAGE;
+  message: string;
+  criteria: Code | null;
 }
 
 export type MessageAction = DisplayMessageAction | InstructionMessageAction | PlayerMessageAction | CharacterMessageAction;
 
 export type CodeAction = {
-  actionType:ActionType.CODE;
-  code:Code;
+  actionType: ActionType.CODE;
+  code: Code;
 }
 
-type Action = MessageAction | CodeAction;
+type Action = MessageAction | CodeAction | RestartTurnAction;
+
+export type RestartTurnAction = {
+  actionType: ActionType.RESTART_TURN;
+}
 
 export default Action;

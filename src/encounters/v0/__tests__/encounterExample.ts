@@ -19,6 +19,8 @@ _The troll reluctantly allows you to pass. Victory!
 
 ## user says they don't want to cross the bridge
 
+
+!!
 _The troll is satisfied for now that you won't try to cross his precious bridge._
 
 ## user says they are afraid of you

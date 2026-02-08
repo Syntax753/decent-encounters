@@ -16,37 +16,37 @@ import VariableManager, { VariableCollection } from "@/spielCode/VariableManager
 export const GENERATING = '...';
 const MAX_LINE_COUNT = 100;
 
-let theChatBuffer:TextConsoleBuffer|null = null;
-let theEncounter:Encounter|null = null;
-let theSessionVariables:VariableManager|null = null;
+let theChatBuffer: TextConsoleBuffer | null = null;
+let theEncounter: Encounter | null = null;
+let theSessionVariables: VariableManager | null = null;
 
-function _isLastLineGenerating():boolean {
+function _isLastLineGenerating(): boolean {
   assertNonNullable(theChatBuffer);
   if (!theChatBuffer.lines.length) return false;
   const lastLine = theChatBuffer.lines[theChatBuffer.lines.length - 1].text;
   return lastLine.endsWith(GENERATING);
 }
 
-function _addChatBufferLine(line:string) {
+function _addChatBufferLine(line: string) {
   assertNonNullable(theChatBuffer);
-  if (_isLastLineGenerating()){
+  if (_isLastLineGenerating()) {
     theChatBuffer.replaceLastLine(line);
   } else {
     theChatBuffer.addLine(line);
   }
 }
 
-function _addPlayerLine(line:string) {
+function _addPlayerLine(line: string) {
   assertNonNullable(theChatBuffer);
   _addChatBufferLine(`${PLAYER_PREFIX}${line}`);
 }
 
-function _addCharacterLine(line:string) {
+function _addCharacterLine(line: string) {
   assertNonNullable(theChatBuffer);
   _addChatBufferLine(line);
 }
 
-function _addNarrationLine(line:string) {
+function _addNarrationLine(line: string) {
   assertNonNullable(theChatBuffer);
   _addChatBufferLine(`${NARRATION_PREFIX}${line}`);
 }
@@ -56,80 +56,87 @@ function _addGeneratingLine() {
   _addChatBufferLine(GENERATING);
 }
 
-function _onUpdateResponse(responseText:string, setLines:Function) {
+function _onUpdateResponse(responseText: string, setLines: Function) {
   assertNonNullable(theChatBuffer);
   const displayText = stripTriggerCodes(responseText);
   _addChatBufferLine(`${displayText}${GENERATING}`);
   setLines(theChatBuffer.lines)
 }
 
-function _actionCriteriaMet(action:MessageAction):boolean {
+function _actionCriteriaMet(action: MessageAction): boolean {
   if (!action.criteria) return true;
-  assertNonNullable(theSessionVariables); 
+  assertNonNullable(theSessionVariables);
   executeCode(action.criteria, theSessionVariables);
   return theSessionVariables.get('__result') === true;
 }
 
-function _handleActions(actions:Action[]):string { // TODO factor out of this module. See comments at top.
+function _handleActions(actions: Action[]): { systemMessage: string, restartTurn: boolean } { // TODO factor out of this module. See comments at top.
   assertNonNullable(theChatBuffer);
   let systemMessage = '';
-  for(let i = 0; i < actions.length; ++i) {
+  let restartTurn = false;
+  for (let i = 0; i < actions.length; ++i) {
     const action = actions[i];
-    switch(action.actionType) {
+    switch (action.actionType) {
       case ActionType.NARRATION_MESSAGE:
         if (_actionCriteriaMet(action)) _addNarrationLine(action.message);
-      break;
+        break;
 
       case ActionType.CHARACTER_MESSAGE:
-        if (!_actionCriteriaMet(action)) break; 
+        if (!_actionCriteriaMet(action)) break;
         _addCharacterLine(action.message);
         addAssistantMessage(action.message);
-      break;
+        break;
 
       case ActionType.PLAYER_MESSAGE:
-        if (!_actionCriteriaMet(action)) break; 
+        if (!_actionCriteriaMet(action)) break;
         _addPlayerLine(action.message);
         addUserMessage(action.message);
-      break;
-      
+        break;
+
       case ActionType.INSTRUCTION_MESSAGE:
         if (_actionCriteriaMet(action)) {
           if (systemMessage.length) systemMessage += '\n';
           systemMessage += action.message;
         }
-      break;
+        break;
 
       case ActionType.CODE:
         assertNonNullable(theSessionVariables);
         executeCode(action.code, theSessionVariables);
-      break;
+        break;
+
+      case ActionType.RESTART_TURN:
+        restartTurn = true;
+        break;
 
       default:
         throw Error('Unexpected');
     }
   }
-  return systemMessage;
+  return { systemMessage, restartTurn };
 }
 
-function _finalizeResponse(responseText:string) {
+function _finalizeResponse(responseText: string): boolean {
   assertNonNullable(theChatBuffer);
   assertNonNullable(theEncounter);
   const characterTrigger = findCharacterTriggerInText(responseText, theEncounter.characterTriggers);
   if (characterTrigger) {
     characterTrigger.isEnabled = false; // Prevent the same trigger from firing again in the future, unless it's re-enabled by the encounter's logic.
-    _handleActions(characterTrigger.actions);
+    const { restartTurn } = _handleActions(characterTrigger.actions);
+    return restartTurn;
   } else {
     const displayText = stripTriggerCodes(responseText);
     _addCharacterLine(displayText);
+    return false;
   }
 }
 
-function _encounterToSystemMessage(encounter:Encounter):string { // TODO factor out of this module. See comments at top.
+function _encounterToSystemMessage(encounter: Encounter): string { // TODO factor out of this module. See comments at top.
   assertNonNullable(theEncounter);
   assertNonNullable(theSessionVariables);
   enableConditionalCharacterTriggers(theEncounter.characterTriggers, theSessionVariables);
-  let systemMessage = _handleActions(encounter.instructionActions);
-  for(let i = 0; i < encounter.characterTriggers.length; ++i) {
+  let { systemMessage } = _handleActions(encounter.instructionActions);
+  for (let i = 0; i < encounter.characterTriggers.length; ++i) {
     const { criteria, triggerCode, isEnabled } = encounter.characterTriggers[i];
     if (!isEnabled) continue;
     systemMessage += `\nIf ${criteria} then output @${triggerCode} and nothing else.`;
@@ -137,7 +144,7 @@ function _encounterToSystemMessage(encounter:Encounter):string { // TODO factor 
   return systemMessage;
 }
 
-function _initForEncounter(encounter:Encounter) {
+function _initForEncounter(encounter: Encounter) {
   assertNonNullable(theChatBuffer);
   theChatBuffer.clear();
   theEncounter = encounter;
@@ -155,17 +162,17 @@ function _updateSystemMessageForEncounter() {
   setSystemMessage(systemMessage);
 }
 
-export function initChat(encounter:Encounter, setLines:Function) {
+export function initChat(encounter: Encounter, setLines: Function) {
   theChatBuffer = new TextConsoleBuffer(MAX_LINE_COUNT);
   _initForEncounter(encounter);
   setLines(theChatBuffer.lines);
 }
 
-export function getVariables():VariableCollection {
+export function getVariables(): VariableCollection {
   return !theSessionVariables ? {} : theSessionVariables.toCollection();
 }
 
-export function updateEncounter(encounter:Encounter, setEncounter:Function, setModalDialogName:Function, setLines:Function) {
+export function updateEncounter(encounter: Encounter, setEncounter: Function, setModalDialogName: Function, setLines: Function) {
   assertNonNullable(theChatBuffer);
   setModalDialogName(null);
   setEncounter(encounter);
@@ -173,30 +180,47 @@ export function updateEncounter(encounter:Encounter, setEncounter:Function, setM
   setLines(theChatBuffer.lines);
 }
 
-export function restartEncounter(encounter:Encounter, setLines:Function) {
+export function restartEncounter(encounter: Encounter, setLines: Function) {
   assertNonNullable(theChatBuffer);
   _initForEncounter(encounter);
   setLines(theChatBuffer.lines);
 }
 
-export async function submitPrompt(prompt:string, setLines:Function) { // TODO factor out of this module. See comments at top.
-    assertNonNullable(theChatBuffer);
-    _addPlayerLine(prompt);
-    _addGeneratingLine();
-    setLines(theChatBuffer.lines);
-    _updateSystemMessageForEncounter();
-    try {
-      if (!isLlmConnected()) { 
-        const message = isServingLocally() 
+export async function submitPrompt(prompt: string, setLines: Function) { // TODO factor out of this module. See comments at top.
+  const MAX_RESTARTS = 5;
+  assertNonNullable(theChatBuffer);
+  _addPlayerLine(prompt);
+  _addGeneratingLine();
+  setLines(theChatBuffer.lines);
+
+  try {
+    if (!isLlmConnected()) {
+      const message = isServingLocally()
         ? `LLM is not connected. You're in a dev environment where this is expected (hot reloads, canceling the LLM load). You can refresh the page to load the LLM.`
         : 'LLM is not connected. Try refreshing the page.';
-        console.error(message); // TODO toast
-        return; 
-      }
-      const fullResponseText = await generate(prompt, (responseText:string) => _onUpdateResponse(responseText, setLines) );
-      _finalizeResponse(fullResponseText);
-      setLines(theChatBuffer.lines);
-    } catch(e) {
-      console.error('Error while generating response.', e);
+      console.error(message); // TODO toast
+      return;
     }
+
+    let restartCount = 0;
+    let restartTurn = false;
+    do {
+      _updateSystemMessageForEncounter();
+      const fullResponseText = await generate(prompt, (responseText: string) => _onUpdateResponse(responseText, setLines));
+      restartTurn = _finalizeResponse(fullResponseText);
+      if (restartTurn) {
+        restartCount++;
+        if (restartCount > MAX_RESTARTS) {
+          console.error('Max restarts exceeded.');
+          break;
+        }
+        _addGeneratingLine(); // Add a new generating line for the next attempt
+        setLines(theChatBuffer.lines);
+      }
+    } while (restartTurn);
+
+    setLines(theChatBuffer.lines);
+  } catch (e) {
+    console.error('Error while generating response.', e);
+  }
 }
