@@ -14,6 +14,7 @@ import DiagnosticDialog from "./dialogs/DiagnosticDialog";
 import { importEncounterFile } from "./interactions/import";
 import { downloadEncounter } from "./interactions/export";
 import AboutDialog from "./dialogs/AboutDialog";
+import WrongModelDialog from "./dialogs/WrongModelDialog";
 
 function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -24,7 +25,7 @@ function HomeScreen() {
   useEffect(() => {
     if (isLoading) return;
 
-    init(setEncounter, setLines).then(isLlmConnected => { 
+    init(setEncounter, setLines, setModalDialogName).then(isLlmConnected => { 
       if (!isLlmConnected) { setIsLoading(true); return; }
     });
   }, [isLoading]);
@@ -62,6 +63,11 @@ function HomeScreen() {
       />
       <AboutDialog
         isOpen={modalDialogName === AboutDialog.name}
+        onClose={() => setModalDialogName(null)}
+      />
+      <WrongModelDialog
+        expectedModelId={encounter ? encounter.model : 'unknown'}
+        isOpen={modalDialogName === WrongModelDialog.name}
         onClose={() => setModalDialogName(null)}
       />
     </div>

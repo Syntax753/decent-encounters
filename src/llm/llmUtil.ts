@@ -61,7 +61,7 @@ export function isLlmConnected():boolean {
 
 // Useful for app code that needs to use model-specific prompts or has other model-specific behavior.
 export function getConnectionModelId():string {
-  if (theConnection.modelId = UNSPECIFIED_MODEL_ID) throw Error('Must connect before model ID can be known.');
+  if (theConnection.modelId === UNSPECIFIED_MODEL_ID) throw Error('Must connect before model ID can be known.');
   return theConnection.modelId;
 }
 
