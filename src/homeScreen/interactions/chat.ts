@@ -5,11 +5,12 @@ import TextConsoleBuffer from "@/components/textConsole/TextConsoleBuffer";
 import { isServingLocally } from "@/developer/devEnvUtil";
 import { enableConditionalCharacterTriggers, findCharacterTriggerInText, stripTriggerCodes } from "@/encounters/encounterUtil";
 import Encounter from "@/encounters/types/Encounter";
-import Action, { MessageAction } from "@/encounters/v0/types/Action";
+import Action from "@/encounters/v0/types/Action";
 import ActionType from "@/encounters/v0/types/ActionType";
 import { addAssistantMessage, addUserMessage, clearChatHistory, generate, isLlmConnected, setSystemMessage } from "@/llm/llmUtil";
 import { executeCode } from "@/spielCode/codeUtil";
 import VariableManager, { VariableCollection } from "@/spielCode/VariableManager";
+import Code from "@/spielCode/types/Code";
 
 // TODO - at some point, refactor the encounter-specific logic into encounterUtil or a different module that is uncoupled to input, display, and LLM.
 
@@ -63,25 +64,26 @@ function _onUpdateResponse(responseText:string, setLines:Function) {
   setLines(theChatBuffer.lines)
 }
 
-function _actionCriteriaMet(action:MessageAction):boolean {
-  if (!action.criteria) return true;
+function _actionCriteriaMet(criteria:Code|null):boolean {
+  if (!criteria) return true;
   assertNonNullable(theSessionVariables); 
-  executeCode(action.criteria, theSessionVariables);
+  executeCode(criteria, theSessionVariables);
   return theSessionVariables.get('__result') === true;
 }
 
-function _handleActions(actions:Action[]):string { // TODO factor out of this module. See comments at top.
+function _handleActions(actions:Action[]):{systemMessage:string, reprocess:boolean} { // TODO factor out of this module. See comments at top.
   assertNonNullable(theChatBuffer);
+  let reprocess = false;
   let systemMessage = '';
   for(let i = 0; i < actions.length; ++i) {
     const action = actions[i];
     switch(action.actionType) {
       case ActionType.NARRATION_MESSAGE:
-        if (_actionCriteriaMet(action)) _addNarrationLine(action.messages.nextMessage());
+        if (_actionCriteriaMet(action.criteria)) _addNarrationLine(action.messages.nextMessage());
       break;
 
       case ActionType.CHARACTER_MESSAGE:
-        if (_actionCriteriaMet(action)) {
+        if (_actionCriteriaMet(action.criteria)) {
           const message = action.messages.nextMessage();
           _addCharacterLine(message);
           addAssistantMessage(message);
@@ -89,7 +91,7 @@ function _handleActions(actions:Action[]):string { // TODO factor out of this mo
       break;
 
       case ActionType.PLAYER_MESSAGE:
-        if (_actionCriteriaMet(action)) {
+        if (_actionCriteriaMet(action.criteria)) {
           const message = action.messages.nextMessage();
           _addPlayerLine(message);
           addUserMessage(message);
@@ -97,7 +99,7 @@ function _handleActions(actions:Action[]):string { // TODO factor out of this mo
       break;
       
       case ActionType.INSTRUCTION_MESSAGE:
-        if (_actionCriteriaMet(action)) {
+        if (_actionCriteriaMet(action.criteria)) {
           if (systemMessage.length) systemMessage += '\n';
           systemMessage += action.messages.nextMessage();
         }
@@ -108,23 +110,29 @@ function _handleActions(actions:Action[]):string { // TODO factor out of this mo
         executeCode(action.code, theSessionVariables);
       break;
 
+      case ActionType.REPROCESS:
+        if (_actionCriteriaMet(action.criteria)) reprocess = true;
+      break;
+
       default:
         throw Error('Unexpected');
     }
   }
-  return systemMessage;
+  return { systemMessage, reprocess };
 }
 
-function _finalizeResponse(responseText:string) {
+function _finalizeResponse(responseText:string):boolean {
   assertNonNullable(theChatBuffer);
   assertNonNullable(theEncounter);
   const characterTrigger = findCharacterTriggerInText(responseText, theEncounter.characterTriggers);
   if (characterTrigger) {
     characterTrigger.isEnabled = false; // Prevent the same trigger from firing again in the future, unless it's re-enabled by the encounter's logic.
-    _handleActions(characterTrigger.actions);
+    const { reprocess } = _handleActions(characterTrigger.actions);
+    return reprocess;
   } else {
     const displayText = stripTriggerCodes(responseText);
     _addCharacterLine(displayText);
+    return false;
   }
 }
 
@@ -132,7 +140,7 @@ function _encounterToSystemMessage(encounter:Encounter):string { // TODO factor 
   assertNonNullable(theEncounter);
   assertNonNullable(theSessionVariables);
   enableConditionalCharacterTriggers(theEncounter.characterTriggers, theSessionVariables);
-  let systemMessage = _handleActions(encounter.instructionActions);
+  let { systemMessage } = _handleActions(encounter.instructionActions);
   for(let i = 0; i < encounter.characterTriggers.length; ++i) {
     const { criteria, triggerCode, isEnabled } = encounter.characterTriggers[i];
     if (!isEnabled) continue;
@@ -184,23 +192,31 @@ export function restartEncounter(encounter:Encounter, setLines:Function) {
 }
 
 export async function submitPrompt(prompt:string, setLines:Function) { // TODO factor out of this module. See comments at top.
-    assertNonNullable(theChatBuffer);
-    _addPlayerLine(prompt);
+  if (!isLlmConnected()) { 
+    const message = isServingLocally() 
+    ? `LLM is not connected. You're in a dev environment where this is expected (hot reloads, canceling the LLM load). You can refresh the page to load the LLM.`
+    : 'LLM is not connected. Try refreshing the page.';
+    console.error(message); // TODO toast
+    return; 
+  }
+
+  assertNonNullable(theChatBuffer);
+  _addPlayerLine(prompt);
+  let reprocessCount = 0;
+  const MAX_REPROCESS_COUNT = 3; // Don't want an LLM-triggered infinite loop.
+  while (reprocessCount < MAX_REPROCESS_COUNT) {
     _addGeneratingLine();
     setLines(theChatBuffer.lines);
     _updateSystemMessageForEncounter();
     try {
-      if (!isLlmConnected()) { 
-        const message = isServingLocally() 
-        ? `LLM is not connected. You're in a dev environment where this is expected (hot reloads, canceling the LLM load). You can refresh the page to load the LLM.`
-        : 'LLM is not connected. Try refreshing the page.';
-        console.error(message); // TODO toast
-        return; 
-      }
       const fullResponseText = await generate(prompt, (responseText:string) => _onUpdateResponse(responseText, setLines) );
-      _finalizeResponse(fullResponseText);
+      const reprocess = _finalizeResponse(fullResponseText);
       setLines(theChatBuffer.lines);
+      if (!reprocess) break;
     } catch(e) {
       console.error('Error while generating response.', e);
+      break;
     }
+    ++reprocessCount;
+  }
 }

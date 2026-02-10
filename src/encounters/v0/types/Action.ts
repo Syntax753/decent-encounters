@@ -33,6 +33,11 @@ export type CodeAction = {
   code:Code;
 }
 
-type Action = MessageAction | CodeAction;
+export type ReprocessAction = {
+  actionType:ActionType.REPROCESS;
+  criteria:Code|null;
+}
+
+type Action = MessageAction | CodeAction | ReprocessAction;
 
 export default Action;

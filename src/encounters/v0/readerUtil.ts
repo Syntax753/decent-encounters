@@ -2,7 +2,7 @@ import { assert } from "decent-portal";
 
 import { parseNameValueLines, parseSections } from "../markdownUtil";
 import Encounter from "./types/Encounter";
-import Action, { CodeAction } from "./types/Action";
+import Action, { CodeAction, MessageAction } from "./types/Action";
 import ActionType from "./types/ActionType";
 import CharacterTrigger from "./types/CharacterTrigger";
 import { parseVersion } from "../versionUtil";
@@ -13,7 +13,7 @@ import MessageSet from "./types/MessageSet";
 function _stripEnclosers(text:string, enclosingText:string):string {
   text = text.trim();
   assert(text.startsWith(enclosingText));
-  return text.endsWith(enclosingText) 
+  return text.endsWith(enclosingText) && text.length > enclosingText.length
     ? text.substring(enclosingText.length, text.length - enclosingText.length).trim()
     : text.substring(enclosingText.length).trim();
 }
@@ -32,13 +32,18 @@ function _parseCriteriaFromMessageLine(line:string):{lineWithoutCriteria:string,
 
 function _parseMessageLine(line:string):{messages:MessageSet, criteria:Code|null} {
   const {lineWithoutCriteria, criteria} = _parseCriteriaFromMessageLine(line);
-  const messages = lineWithoutCriteria.split('|').map(msg => msg.trim()).filter(msg => msg.length > 0);
+  const messages = lineWithoutCriteria.length 
+    ? lineWithoutCriteria.split('|').map(msg => msg.trim()).filter(msg => msg.length > 0)
+    : [];
   return {messages:new MessageSet(messages), criteria};
 }
 
 function _parseMessageAction(line:string, encloser:string, actionType:ActionType):Action {
   line = _stripEnclosers(line, encloser);
   const {messages, criteria} = _parseMessageLine(line);
+  if (actionType === ActionType.CHARACTER_MESSAGE && messages.count === 0) { // Handling > or >'criteria`
+    return { actionType:ActionType.REPROCESS, criteria };
+  }
   return { actionType, messages, criteria } as Action;
 }
 
