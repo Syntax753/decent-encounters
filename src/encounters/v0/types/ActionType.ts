@@ -4,7 +4,8 @@ enum ActionType {
   PLAYER_MESSAGE,
   INSTRUCTION_MESSAGE,
   CODE,
-  RESTART_TURN
+  RESTART_TURN,
+  RESTART_TURN_WITH_LAST_RESPONSE
 }
 
 export default ActionType;

@@ -25,6 +25,11 @@ _The troll is satisfied for now that you won't try to cross his precious bridge.
 
 ## user says they are afraid of you
 
-_The troll is sad that he scared you so badly. He withdraws to under his bridge._`;
+_The troll is sad that he scared you so badly. He withdraws to under his bridge.
+
+## user plays music \`dancing?\`
+
+!?
+_The troll starts dancing._`;
 
 export default text;

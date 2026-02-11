@@ -35,7 +35,7 @@ describe('readerUtil', () => {
     a = encounter.instructionActions[0];
     expect(a.actionType).toBe(ActionType.INSTRUCTION_MESSAGE);
     expect((a as InstructionMessageAction).message).toBe('You are a troll guarding a bridge.');
-    expect(encounter.characterTriggers.length).toBe(3);
+    expect(encounter.characterTriggers.length).toBe(4);
     const c = encounter.characterTriggers[0];
     expect(c.criteria).toBe("user describes something you've never heard of before");
     expect(c.actions.length).toBe(1);
@@ -43,5 +43,8 @@ describe('readerUtil', () => {
     expect(a.actionType).toBe(ActionType.NARRATION_MESSAGE);
     expect((a as DisplayMessageAction).message).toBe('The troll reluctantly allows you to pass. Victory!');
     expect(encounter.characterTriggers[1].actions[0].actionType).toBe(ActionType.RESTART_TURN);
+    expect(encounter.characterTriggers[3].actions[0].actionType).toBe(ActionType.RESTART_TURN_WITH_LAST_RESPONSE);
+    expect(encounter.characterTriggers[3].checkOutput).toBe(true);
+    expect(encounter.characterTriggers[3].enabledCriteria?.source).toBe("__result=dancing");
   });
 });

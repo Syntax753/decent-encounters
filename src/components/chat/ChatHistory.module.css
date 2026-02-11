@@ -48,3 +48,31 @@
 .narrativeLine {
   text-align: center;
 }
+
+.leftLine {
+  width: fit-content;
+  align-self: flex-start;
+  max-width: 75%;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  padding-left: 1vh;
+  padding-right: 1vh;
+  border-radius: 1vh;
+  background-color: #444444;
+  color: white;
+  text-align: left;
+}
+
+.rightLine {
+  width: fit-content;
+  align-self: flex-end;
+  max-width: 75%;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  padding-left: 1vh;
+  padding-right: 1vh;
+  border-radius: 1vh;
+  background-color: #444444;
+  color: white;
+  text-align: right;
+}

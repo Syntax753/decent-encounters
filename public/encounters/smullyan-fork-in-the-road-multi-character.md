@@ -33,7 +33,7 @@ _You are only allowed to ask single yes-or-no question to determine which path l
 
 ## `!talkToAlpha` user addresses Alpha
 
-_ You approach Alpha_
+_You approach Alpha_
 `talkToAlpha=true`
 !!
 

@@ -27,6 +27,10 @@ function _isLastLineGenerating(): boolean {
   return lastLine.endsWith(GENERATING);
 }
 
+function _delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function _addChatBufferLine(line: string) {
   assertNonNullable(theChatBuffer);
   if (_isLastLineGenerating()) {
@@ -70,10 +74,13 @@ function _actionCriteriaMet(action: MessageAction): boolean {
   return theSessionVariables.get('__result') === true;
 }
 
-function _handleActions(actions: Action[]): { systemMessage: string, restartTurn: boolean } { // TODO factor out of this module. See comments at top.
+
+type RestartType = 'NONE' | 'SAME_PROMPT' | 'LAST_RESPONSE';
+
+function _handleActions(actions: Action[]): { systemMessage: string, restartType: RestartType } { // TODO factor out of this module. See comments at top.
   assertNonNullable(theChatBuffer);
   let systemMessage = '';
-  let restartTurn = false;
+  let restartType: RestartType = 'NONE';
   for (let i = 0; i < actions.length; ++i) {
     const action = actions[i];
     switch (action.actionType) {
@@ -106,30 +113,62 @@ function _handleActions(actions: Action[]): { systemMessage: string, restartTurn
         break;
 
       case ActionType.RESTART_TURN:
-        restartTurn = true;
-        break;
+        restartType = 'SAME_PROMPT';
+        break; // Stop processing further actions for this turn
+
+      case ActionType.RESTART_TURN_WITH_LAST_RESPONSE:
+        restartType = 'LAST_RESPONSE';
+        break; // Stop processing further actions for this turn
 
       default:
         throw Error('Unexpected');
     }
+    if (restartType !== 'NONE') break;
   }
-  return { systemMessage, restartTurn };
+  return { systemMessage, restartType };
 }
 
-function _finalizeResponse(responseText: string): boolean {
+// Global alignment toggle (reset in init)
+let _useLeftAlignment = true;
+
+
+
+function _finalizeResponse(responseText: string): RestartType {
   assertNonNullable(theChatBuffer);
   assertNonNullable(theEncounter);
+  let displayText = stripTriggerCodes(responseText);
+
   const characterTrigger = findCharacterTriggerInText(responseText, theEncounter.characterTriggers);
   if (characterTrigger) {
     characterTrigger.isEnabled = false; // Prevent the same trigger from firing again in the future, unless it's re-enabled by the encounter's logic.
-    const { restartTurn } = _handleActions(characterTrigger.actions);
-    return restartTurn;
-  } else {
-    const displayText = stripTriggerCodes(responseText);
+
+    if (characterTrigger.speakerName) {
+      displayText = `${characterTrigger.speakerName}: ${displayText}`;
+    }
+
+    // Add alignment prefix
+    const prefix = _useLeftAlignment ? 'LEFT:' : 'RIGHT:';
+    displayText = `${prefix}${displayText}`;
+    _useLeftAlignment = !_useLeftAlignment; // Toggle for next time
+
     _addCharacterLine(displayText);
-    return false;
+
+    const { restartType } = _handleActions(characterTrigger.actions);
+    return restartType;
+  } else {
+    // No trigger, standard character response
+    const prefix = _useLeftAlignment ? 'LEFT:' : 'RIGHT:';
+    displayText = `${prefix}${displayText}`;
+    _useLeftAlignment = !_useLeftAlignment;
+
+    if (displayText.trim().length > 0) {
+      _addCharacterLine(displayText);
+    }
+    return 'NONE';
   }
 }
+
+
 
 function _encounterToSystemMessage(encounter: Encounter): string { // TODO factor out of this module. See comments at top.
   assertNonNullable(theEncounter);
@@ -137,9 +176,9 @@ function _encounterToSystemMessage(encounter: Encounter): string { // TODO facto
   enableConditionalCharacterTriggers(theEncounter.characterTriggers, theSessionVariables);
   let { systemMessage } = _handleActions(encounter.instructionActions);
   for (let i = 0; i < encounter.characterTriggers.length; ++i) {
-    const { criteria, triggerCode, isEnabled } = encounter.characterTriggers[i];
-    if (!isEnabled) continue;
-    systemMessage += `\nIf ${criteria} then output @${triggerCode} and nothing else.`;
+    const { criteria, triggerCode, isEnabled, checkOutput } = encounter.characterTriggers[i];
+    if (!isEnabled || checkOutput) continue; // Don't tell LLM about state-based triggers
+    systemMessage += `\nIf ${criteria} then output @${triggerCode}.`;
   }
   return systemMessage;
 }
@@ -149,6 +188,7 @@ function _initForEncounter(encounter: Encounter) {
   theChatBuffer.clear();
   theEncounter = encounter;
   theSessionVariables = new VariableManager();
+  _useLeftAlignment = true;
   const systemMessage = _encounterToSystemMessage(encounter);
   setSystemMessage(systemMessage);
   clearChatHistory();
@@ -187,7 +227,7 @@ export function restartEncounter(encounter: Encounter, setLines: Function) {
 }
 
 export async function submitPrompt(prompt: string, setLines: Function) { // TODO factor out of this module. See comments at top.
-  const MAX_RESTARTS = 5;
+  const MAX_RESTARTS = 1000;
   assertNonNullable(theChatBuffer);
   _addPlayerLine(prompt);
   _addGeneratingLine();
@@ -203,21 +243,45 @@ export async function submitPrompt(prompt: string, setLines: Function) { // TODO
     }
 
     let restartCount = 0;
-    let restartTurn = false;
+    let restartType: RestartType = 'NONE';
+    let currentPrompt = prompt;
+
     do {
       _updateSystemMessageForEncounter();
-      const fullResponseText = await generate(prompt, (responseText: string) => _onUpdateResponse(responseText, setLines));
-      restartTurn = _finalizeResponse(fullResponseText);
-      if (restartTurn) {
+      console.log('Generating response for prompt:', currentPrompt);
+
+
+      const temperature = restartType === 'LAST_RESPONSE' ? 0.2 : undefined;
+      const fullResponseText = await generate(currentPrompt, (responseText: string) => _onUpdateResponse(responseText, setLines), temperature);
+      console.log('Full response text:', fullResponseText);
+      restartType = _finalizeResponse(fullResponseText);
+      console.log('Restart type:', restartType);
+
+
+
+      if (restartType !== 'NONE') {
+        setLines(theChatBuffer.lines); // Force UI update to show aligned text BEFORE delay
+
         restartCount++;
         if (restartCount > MAX_RESTARTS) {
           console.error('Max restarts exceeded.');
           break;
         }
+
+        if (restartType === 'LAST_RESPONSE') {
+          currentPrompt = stripTriggerCodes(fullResponseText);
+          clearChatHistory(); // User requested no history for !? commands
+        }
+
+        const strippedResponse = stripTriggerCodes(fullResponseText);
+        if (strippedResponse.trim().length > 0) {
+          await _delay(5000); // Wait 5 seconds before continuing the conversation
+        }
+
         _addGeneratingLine(); // Add a new generating line for the next attempt
         setLines(theChatBuffer.lines);
       }
-    } while (restartTurn);
+    } while (restartType !== 'NONE');
 
     setLines(theChatBuffer.lines);
   } catch (e) {

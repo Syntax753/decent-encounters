@@ -7,8 +7,13 @@ export async function init(setEncounter: Function, setLines: Function): Promise<
 
   // It's going to double-load in dev environment, and that's harmless. If you add a flag check, you also
   // need to do something like have 3 potential return states, e.g., failed-try-again-after-llm-load, failed-dont-try-again, success.
-  const encounter = await loadEncounter('encounters/smullyan-fork-in-the-road.md');
-  initChat(encounter, setLines);
-  setEncounter(encounter);
-  return true;
+  try {
+    const encounter = await loadEncounter('encounters/the-bard-and-the-muse.md');
+    initChat(encounter, setLines);
+    setEncounter(encounter);
+    return true;
+  } catch (e) {
+    console.error('Failed to initialize encounter:', e);
+    return false;
+  }
 }

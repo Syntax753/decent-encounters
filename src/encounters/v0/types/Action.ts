@@ -32,10 +32,14 @@ export type CodeAction = {
   code: Code;
 }
 
-type Action = MessageAction | CodeAction | RestartTurnAction;
+type Action = MessageAction | CodeAction | RestartTurnAction | RestartTurnWithLastResponseAction;
 
 export type RestartTurnAction = {
   actionType: ActionType.RESTART_TURN;
+}
+
+export type RestartTurnWithLastResponseAction = {
+  actionType: ActionType.RESTART_TURN_WITH_LAST_RESPONSE;
 }
 
 export default Action;

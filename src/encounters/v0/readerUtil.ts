@@ -17,16 +17,33 @@ function _stripEnclosers(text: string, enclosingText: string): string {
     : text.substring(enclosingText.length).trim();
 }
 
-function _parseConditionalCodeBlock(line: string): { message: string, criteria: Code | null } {
+function _parseConditionalCodeBlock(line: string): { message: string, criteria: Code | null, checkOutput: boolean, speakerName: string | undefined } {
   const startPos = line.indexOf('`');
-  if (startPos === -1) return { message: line, criteria: null };
+  if (startPos === -1) return { message: line, criteria: null, checkOutput: false, speakerName: undefined };
   const endPos = line.indexOf('`', startPos + 1);
-  if (endPos === -1) return { message: line, criteria: null };
+  if (endPos === -1) return { message: line, criteria: null, checkOutput: false, speakerName: undefined };
   if (line.indexOf('`', endPos + 1) !== -1) throw Error('Multiple code blocks found in message line - only one allowed.');
-  const codeText = `__result=${line.substring(startPos + 1, endPos)}`; // "__result=" - converts the concise expression format to a statement.
+
+  let inlineCode = line.substring(startPos + 1, endPos);
+  let checkOutput = false;
+  let speakerName: string | undefined = undefined;
+
+  // Check for speaker="Name"
+  const speakerMatch = inlineCode.match(/speaker="([^"]+)"/);
+  if (speakerMatch) {
+    speakerName = speakerMatch[1];
+    inlineCode = inlineCode.replace(speakerMatch[0], '').trim();
+  }
+
+  if (inlineCode.endsWith('?')) {
+    checkOutput = true;
+    inlineCode = inlineCode.substring(0, inlineCode.length - 1);
+  }
+
+  const codeText = `__result=${inlineCode}`; // "__result=" - converts the concise expression format to a statement.
   const message = `${line.substring(0, startPos - 1)}${line.substring(endPos + 1)}`.trim();
   const criteria = textToCode(codeText);
-  return { message, criteria };
+  return { message, criteria, checkOutput, speakerName };
 }
 
 function _parseMessageAction(line: string, encloser: string, actionType: ActionType): Action {
@@ -48,6 +65,7 @@ function _lineToAction(line: string): Action | null {
   if (line.startsWith('>')) return _parseMessageAction(line, '>', ActionType.CHARACTER_MESSAGE);
   if (line.startsWith('`')) return _parseCodeAction(line);
   if (line.startsWith('!!')) return { actionType: ActionType.RESTART_TURN };
+  if (line.startsWith('!?')) return { actionType: ActionType.RESTART_TURN_WITH_LAST_RESPONSE };
   return null;
 }
 
@@ -68,20 +86,23 @@ function _parseStartSection(startSection?: string): Action[] {
   return _parseActions(startSection);
 }
 
-function _parseTriggerSectionName(triggerSectionName: string): { criteria: string, enabledCriteria: Code | null } {
-  const { message, criteria } = _parseConditionalCodeBlock(triggerSectionName);
-  return { criteria: message, enabledCriteria: criteria };
+function _parseTriggerSectionName(triggerSectionName: string): { criteria: string, enabledCriteria: Code | null, checkOutput: boolean, speakerName: string | undefined } {
+  const { message, criteria, checkOutput, speakerName } = _parseConditionalCodeBlock(triggerSectionName);
+  return { criteria: message, enabledCriteria: criteria, checkOutput, speakerName };
 }
 
 function _parseTriggerSection(triggerSectionName: string, triggerCode: string, triggerSection: string): CharacterTrigger {
   const actions = _parseActions(triggerSection);
-  const { criteria, enabledCriteria } = _parseTriggerSectionName(triggerSectionName);
+  const { criteria, enabledCriteria, checkOutput, speakerName } = _parseTriggerSectionName(triggerSectionName);
+
   return {
     criteria,
     triggerCode,
     actions,
     isEnabled: true,
-    enabledCriteria
+    enabledCriteria,
+    checkOutput,
+    speakerName
   }
 }
 
