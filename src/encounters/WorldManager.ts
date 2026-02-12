@@ -62,6 +62,13 @@ class WorldManager {
         return Object.keys(scene.directions);
     }
 
+    getDirectionsWithDestinations(location: string): { direction: string, destination: string }[] {
+        assert(this._worldDef !== null);
+        const scene = this._worldDef.scenes[location];
+        if (!scene || !scene.directions) return [];
+        return Object.entries(scene.directions).map(([dir, dest]) => ({ direction: dir, destination: dest }));
+    }
+
     saveSceneState(location: string, state: SceneState) {
         this._sceneStates[location] = state;
     }

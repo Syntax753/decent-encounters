@@ -292,21 +292,42 @@ export function restartEncounter(encounter: Encounter, setLines: Function) {
   setLines(theChatBuffer.lines);
 }
 
-const DIRECTION_MAP: { [key: string]: string } = {
-  'n': 'north', 'north': 'north', 'go north': 'north', 'walk north': 'north',
-  's': 'south', 'south': 'south', 'go south': 'south', 'walk south': 'south',
-  'e': 'east', 'east': 'east', 'go east': 'east', 'walk east': 'east',
-  'w': 'west', 'west': 'west', 'go west': 'west', 'walk west': 'west',
-  'ne': 'northeast', 'northeast': 'northeast',
-  'nw': 'northwest', 'northwest': 'northwest',
-  'se': 'southeast', 'southeast': 'southeast',
-  'sw': 'southwest', 'southwest': 'southwest',
+// Short aliases for common directions
+const DIRECTION_ALIASES: { [key: string]: string } = {
+  'n': 'north', 's': 'south', 'e': 'east', 'w': 'west',
+  'ne': 'northeast', 'nw': 'northwest', 'se': 'southeast', 'sw': 'southwest',
+  'u': 'up', 'd': 'down',
 };
 
-function _handleLocalMovement(prompt: string): 'success' | 'blocked' | null {
-  const cleanPrompt = prompt.trim().toLowerCase().replace(/[^a-z ]/g, ''); // simple clean
-  const direction = DIRECTION_MAP[cleanPrompt];
+// Prefixes that indicate movement intent - stripped to extract the direction
+const MOVE_PREFIXES = ['go ', 'walk ', 'head ', 'move ', 'climb ', 'travel ', 'run '];
 
+function _extractDirection(prompt: string): string | null {
+  const clean = prompt.trim().toLowerCase().replace(/[^a-z ]/g, '');
+
+  // Check if the whole prompt is an alias (e.g. "n", "sw", "u")
+  if (DIRECTION_ALIASES[clean]) return DIRECTION_ALIASES[clean];
+
+  // Check if the whole prompt is a raw direction name that exists for this location
+  const availableDirs = WorldManager.getDirections(currentLocation);
+  if (availableDirs.includes(clean)) return clean;
+
+  // Strip movement prefixes to extract the direction word
+  for (const prefix of MOVE_PREFIXES) {
+    if (clean.startsWith(prefix)) {
+      const dirWord = clean.substring(prefix.length).trim();
+      // Check alias
+      if (DIRECTION_ALIASES[dirWord]) return DIRECTION_ALIASES[dirWord];
+      // Check if it's a valid direction for this location
+      if (availableDirs.includes(dirWord)) return dirWord;
+    }
+  }
+
+  return null;
+}
+
+function _handleLocalMovement(prompt: string): 'success' | 'blocked' | null {
+  const direction = _extractDirection(prompt);
   if (!direction) return null;
 
   assertNonNullable(theChatBuffer);
@@ -319,7 +340,7 @@ function _handleLocalMovement(prompt: string): 'success' | 'blocked' | null {
     theSessionVariables.set('location', dest);
     return 'success';
   } else {
-    _addNarrationLine('The forest is too thick to pass through.');
+    _addNarrationLine('You can\'t go that way.');
     return 'blocked';
   }
 }
@@ -412,11 +433,29 @@ function _displayAvailableItems() {
 }
 
 function _displayExitDirections() {
-  const dirs = WorldManager.getDirections(currentLocation);
-  if (dirs.length > 0) {
-    const capitalized = dirs.map(d => d.charAt(0).toUpperCase() + d.slice(1));
-    _addNarrationLine(`You can head ${capitalized.join(', ')} from here.`);
+  const exits = WorldManager.getDirectionsWithDestinations(currentLocation);
+  if (exits.length === 0) return;
+
+  const parts = exits.map(e => {
+    const dir = e.direction.charAt(0).toUpperCase() + e.direction.slice(1);
+    const name = _camelToTitle(e.destination);
+    return `${dir} (${name})`;
+  });
+
+  let joined: string;
+  if (parts.length === 1) {
+    joined = parts[0];
+  } else if (parts.length === 2) {
+    joined = `${parts[0]} or ${parts[1]}`;
+  } else {
+    joined = parts.slice(0, -1).join(', ') + ', or ' + parts[parts.length - 1];
   }
+
+  _addNarrationLine(`You can head ${joined} from here.`);
+}
+
+function _camelToTitle(str: string): string {
+  return str.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
 }
 
 const DROP_PATTERNS = ['drop ', 'put down '];
