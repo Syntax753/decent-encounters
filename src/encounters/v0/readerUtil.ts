@@ -106,6 +106,31 @@ function _parseStartSection(startSection?: string): { actions: Action[], items: 
       if (charName.length > 0) {
         characters.push(charName);
       }
+    } else if (line.startsWith('>')) {
+      // Check for inline character definitions like "> A @nymph is here."
+      let content = line;
+
+      // Regex to find words starting with @, allowing underscores for spaces
+      const regex = /@([a-zA-Z0-9_]+)/g;
+
+      let match;
+      while ((match = regex.exec(content)) !== null) {
+        const rawName = match[1];
+        const cleanName = rawName.replace(/_/g, ' ');
+        characters.push(cleanName);
+      }
+
+      // Remove @ and replace underscores with spaces in display text
+      content = content.replace(regex, (match, p1) => p1.replace(/_/g, ' '));
+
+      const action = _lineToAction(content);
+      if (action) actions.push(action);
+    } else if (line.startsWith('@')) {
+      // Support old syntax too, or dedicated lines
+      const charName = line.substring(1).trim();
+      if (charName.length > 0) {
+        characters.push(charName);
+      }
     } else {
       const action = _lineToAction(line);
       if (action) actions.push(action);

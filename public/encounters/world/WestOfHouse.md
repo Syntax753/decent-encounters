@@ -9,9 +9,7 @@
 _You are standing in an open field west of a white house, with a boarded front door._
 _There is a small mailbox here._
 
-> Hi... I'm a mailbox!|I love mail
-
-@mailbox
+> Hi... I'm a @mailbox!|I love mail
 - leaflet
 
 # Instructions
