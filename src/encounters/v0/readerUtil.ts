@@ -88,8 +88,18 @@ function _parseStartSection(startSection?: string): { actions: Action[], items: 
   const lines = startSection.split('\n');
   for (const line of lines) {
     if (line.startsWith('- ')) {
-      const itemName = line.substring(2).trim();
-      if (itemName.length > 0) items.push(itemName);
+      let itemName = line.substring(2).trim();
+      if (itemName.length > 0) {
+        const isDefaultAvailable = itemName.endsWith('+');
+        if (isDefaultAvailable) {
+          itemName = itemName.slice(0, -1).trim();
+        }
+        items.push(itemName);
+        if (isDefaultAvailable) {
+          const code = textToCode(`__item_available_${itemName}=true`);
+          actions.push({ actionType: ActionType.CODE, code });
+        }
+      }
     } else {
       const action = _lineToAction(line);
       if (action) actions.push(action);

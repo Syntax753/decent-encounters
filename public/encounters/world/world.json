@@ -13,7 +13,8 @@
             "scene": "northOfHouse",
             "directions": {
                 "west": "westOfHouse",
-                "east": "eastOfHouse"
+                "east": "eastOfHouse",
+                "north": "forestPath"
             }
         },
         "eastOfHouse": {
@@ -21,15 +22,514 @@
             "directions": {
                 "north": "northOfHouse",
                 "south": "southOfHouse",
-                "west": "westOfHouse"
+                "west": "clearing",
+                "enter": "kitchen"
             }
         },
         "southOfHouse": {
             "scene": "southOfHouse",
             "directions": {
-                "north": "northOfHouse",
-                "east": "eastOfHouse",
-                "west": "westOfHouse"
+                "west": "westOfHouse",
+                "east": "eastOfHouse"
+            }
+        },
+        "kitchen": {
+            "scene": "kitchen",
+            "directions": {
+                "west": "livingRoom",
+                "up": "attic",
+                "east": "eastOfHouse"
+            }
+        },
+        "livingRoom": {
+            "scene": "livingRoom",
+            "directions": {
+                "east": "kitchen",
+                "down": "cellar",
+                "west": "strangePassage"
+            }
+        },
+        "attic": {
+            "scene": "attic",
+            "directions": {
+                "down": "kitchen"
+            }
+        },
+        "forestPath": {
+            "scene": "forestPath",
+            "directions": {
+                "south": "northOfHouse",
+                "up": "upATree",
+                "north": "forestClearing"
+            }
+        },
+        "upATree": {
+            "scene": "upATree",
+            "directions": {
+                "down": "forestPath"
+            }
+        },
+        "forestClearing": {
+            "scene": "forestClearing",
+            "directions": {
+                "south": "forestPath",
+                "down": "gratingRoom"
+            }
+        },
+        "clearing": {
+            "scene": "clearing",
+            "directions": {
+                "east": "canyonView",
+                "west": "eastOfHouse"
+            }
+        },
+        "canyonView": {
+            "scene": "canyonView",
+            "directions": {
+                "down": "rockyLedge",
+                "northwest": "clearing"
+            }
+        },
+        "rockyLedge": {
+            "scene": "rockyLedge",
+            "directions": {
+                "down": "canyonBottom",
+                "up": "canyonView"
+            }
+        },
+        "canyonBottom": {
+            "scene": "canyonBottom",
+            "directions": {
+                "north": "endOfRainbow",
+                "up": "rockyLedge"
+            }
+        },
+        "endOfRainbow": {
+            "scene": "endOfRainbow",
+            "directions": {
+                "southwest": "canyonBottom"
+            }
+        },
+        "cellar": {
+            "scene": "cellar",
+            "directions": {
+                "up": "livingRoom",
+                "south": "eastOfChasm",
+                "north": "trollRoom"
+            }
+        },
+        "eastOfChasm": {
+            "scene": "eastOfChasm",
+            "directions": {
+                "north": "cellar",
+                "east": "gallery"
+            }
+        },
+        "gallery": {
+            "scene": "gallery",
+            "directions": {
+                "north": "studio",
+                "west": "eastOfChasm"
+            }
+        },
+        "studio": {
+            "scene": "studio",
+            "directions": {
+                "south": "gallery",
+                "up": "kitchen"
+            }
+        },
+        "trollRoom": {
+            "scene": "trollRoom",
+            "directions": {
+                "south": "cellar",
+                "east": "eastWestPassage",
+                "west": "maze1"
+            }
+        },
+        "eastWestPassage": {
+            "scene": "eastWestPassage",
+            "directions": {
+                "west": "trollRoom",
+                "east": "roundRoom",
+                "north": "chasm"
+            }
+        },
+        "roundRoom": {
+            "scene": "roundRoom",
+            "directions": {
+                "west": "eastWestPassage",
+                "southeast": "engravingsCave",
+                "east": "loudRoom"
+            }
+        },
+        "engravingsCave": {
+            "scene": "engravingsCave",
+            "directions": {
+                "northwest": "roundRoom",
+                "east": "domeRoom"
+            }
+        },
+        "domeRoom": {
+            "scene": "domeRoom",
+            "directions": {
+                "down": "torchRoom",
+                "west": "engravingsCave"
+            }
+        },
+        "torchRoom": {
+            "scene": "torchRoom",
+            "directions": {
+                "south": "temple"
+            }
+        },
+        "temple": {
+            "scene": "temple",
+            "directions": {
+                "north": "torchRoom",
+                "east": "egyptianRoom",
+                "south": "altar"
+            }
+        },
+        "egyptianRoom": {
+            "scene": "egyptianRoom",
+            "directions": {
+                "west": "temple"
+            }
+        },
+        "altar": {
+            "scene": "altar",
+            "directions": {
+                "north": "temple",
+                "down": "cave"
+            }
+        },
+        "cave": {
+            "scene": "cave",
+            "directions": {
+                "up": "altar",
+                "north": "mirrorRoom",
+                "down": "entranceToHades"
+            }
+        },
+        "entranceToHades": {
+            "scene": "entranceToHades",
+            "directions": {
+                "up": "cave",
+                "south": "landOfTheDead"
+            }
+        },
+        "landOfTheDead": {
+            "scene": "landOfTheDead",
+            "directions": {
+                "north": "entranceToHades"
+            }
+        },
+        "mirrorRoom": {
+            "scene": "mirrorRoom",
+            "directions": {
+                "south": "cave",
+                "north": "coldPassage"
+            }
+        },
+        "coldPassage": {
+            "scene": "coldPassage",
+            "directions": {
+                "south": "mirrorRoom",
+                "west": "slideRoom"
+            }
+        },
+        "slideRoom": {
+            "scene": "slideRoom",
+            "directions": {
+                "north": "mineEntrance",
+                "east": "coldPassage",
+                "down": "cellar"
+            }
+        },
+        "forest": {
+            "scene": "forest",
+            "directions": {
+                "south": "forestDimlyLit"
+            }
+        },
+        "forestDimlyLit": {
+            "scene": "forestDimlyLit",
+            "directions": {
+                "north": "clearing"
+            }
+        },
+        "chasm": {
+            "scene": "chasm",
+            "directions": {
+                "southwest": "eastWestPassage",
+                "northeast": "reservoirSouth"
+            }
+        },
+        "reservoirSouth": {
+            "scene": "reservoirSouth",
+            "directions": {
+                "southwest": "chasm",
+                "east": "dam",
+                "north": "reservoir",
+                "southeast": "deepCanyon"
+            }
+        },
+        "dam": {
+            "scene": "dam",
+            "directions": {
+                "north": "damLobby",
+                "south": "deepCanyon",
+                "east": "damBase",
+                "west": "reservoirSouth"
+            }
+        },
+        "damLobby": {
+            "scene": "damLobby",
+            "directions": {
+                "south": "dam",
+                "north": "maintenanceRoom"
+            }
+        },
+        "maintenanceRoom": {
+            "scene": "maintenanceRoom",
+            "directions": {
+                "south": "damLobby"
+            }
+        },
+        "damBase": {
+            "scene": "damBase",
+            "directions": {
+                "west": "dam"
+            }
+        },
+        "deepCanyon": {
+            "scene": "deepCanyon",
+            "directions": {
+                "north": "dam",
+                "down": "loudRoom"
+            }
+        },
+        "loudRoom": {
+            "scene": "loudRoom",
+            "directions": {
+                "up": "deepCanyon",
+                "west": "roundRoom"
+            }
+        },
+        "reservoir": {
+            "scene": "reservoir",
+            "directions": {
+                "south": "reservoirSouth",
+                "north": "reservoirNorth"
+            }
+        },
+        "reservoirNorth": {
+            "scene": "reservoirNorth",
+            "directions": {
+                "south": "reservoir",
+                "north": "atlantisRoom"
+            }
+        },
+        "atlantisRoom": {
+            "scene": "atlantisRoom",
+            "directions": {
+                "south": "reservoirNorth"
+            }
+        },
+        "mineEntrance": {
+            "scene": "mineEntrance",
+            "directions": {
+                "west": "squeakyRoom",
+                "south": "slideRoom"
+            }
+        },
+        "squeakyRoom": {
+            "scene": "squeakyRoom",
+            "directions": {
+                "north": "batRoom",
+                "east": "mineEntrance"
+            }
+        },
+        "batRoom": {
+            "scene": "batRoom",
+            "directions": {
+                "east": "shaftRoom",
+                "south": "squeakyRoom"
+            }
+        },
+        "shaftRoom": {
+            "scene": "shaftRoom",
+            "directions": {
+                "west": "batRoom",
+                "north": "smellyRoom"
+            }
+        },
+        "smellyRoom": {
+            "scene": "smellyRoom",
+            "directions": {
+                "south": "shaftRoom",
+                "down": "gasRoom"
+            }
+        },
+        "gasRoom": {
+            "scene": "gasRoom",
+            "directions": {
+                "up": "smellyRoom",
+                "east": "coalMine1"
+            }
+        },
+        "coalMine1": {
+            "scene": "coalMine1",
+            "directions": {
+                "northeast": "coalMine2",
+                "north": "gasRoom"
+            }
+        },
+        "coalMine2": {
+            "scene": "coalMine2",
+            "directions": {
+                "southeast": "coalMine3",
+                "east": "coalMine1"
+            }
+        },
+        "coalMine3": {
+            "scene": "coalMine3",
+            "directions": {
+                "southwest": "coalMine4",
+                "south": "coalMine2"
+            }
+        },
+        "coalMine4": {
+            "scene": "coalMine4",
+            "directions": {
+                "down": "ladderTop",
+                "north": "coalMine1"
+            }
+        },
+        "ladderTop": {
+            "scene": "ladderTop",
+            "directions": {
+                "down": "ladderBottom",
+                "up": "coalMine4"
+            }
+        },
+        "ladderBottom": {
+            "scene": "ladderBottom",
+            "directions": {
+                "up": "ladderTop",
+                "south": "deadEnd",
+                "west": "timberRoom"
+            }
+        },
+        "deadEnd": {
+            "scene": "deadEnd",
+            "directions": {
+                "north": "ladderBottom"
+            }
+        },
+        "timberRoom": {
+            "scene": "timberRoom",
+            "directions": {
+                "east": "ladderBottom",
+                "west": "draftyRoom"
+            }
+        },
+        "draftyRoom": {
+            "scene": "draftyRoom",
+            "directions": {
+                "east": "timberRoom",
+                "south": "machineRoom"
+            }
+        },
+        "machineRoom": {
+            "scene": "machineRoom",
+            "directions": {
+                "north": "draftyRoom"
+            }
+        },
+        "sandyBeach": {
+            "scene": "sandyBeach",
+            "directions": {
+                "northeast": "sandyCave",
+                "south": "shore"
+            }
+        },
+        "sandyCave": {
+            "scene": "sandyCave",
+            "directions": {
+                "southwest": "sandyBeach"
+            }
+        },
+        "shore": {
+            "scene": "shore",
+            "directions": {
+                "north": "sandyBeach",
+                "south": "aragainFalls"
+            }
+        },
+        "aragainFalls": {
+            "scene": "aragainFalls",
+            "directions": {
+                "north": "shore",
+                "east": "endOfRainbow"
+            }
+        },
+        "maze1": {
+            "scene": "maze1",
+            "directions": {
+                "east": "trollRoom",
+                "south": "maze2"
+            }
+        },
+        "maze2": {
+            "scene": "maze2",
+            "directions": {
+                "east": "maze3",
+                "north": "maze1"
+            }
+        },
+        "maze3": {
+            "scene": "maze3",
+            "directions": {
+                "southwest": "maze4",
+                "west": "maze2"
+            }
+        },
+        "maze4": {
+            "scene": "maze4",
+            "directions": {
+                "southeast": "cyclopsRoom",
+                "northeast": "maze3",
+                "down": "gratingRoom"
+            }
+        },
+        "cyclopsRoom": {
+            "scene": "cyclopsRoom",
+            "directions": {
+                "northwest": "maze4",
+                "east": "strangePassage",
+                "up": "treasureRoom"
+            }
+        },
+        "strangePassage": {
+            "scene": "strangePassage",
+            "directions": {
+                "west": "cyclopsRoom",
+                "east": "livingRoom"
+            }
+        },
+        "treasureRoom": {
+            "scene": "treasureRoom",
+            "directions": {
+                "down": "cyclopsRoom"
+            }
+        },
+        "gratingRoom": {
+            "scene": "gratingRoom",
+            "directions": {
+                "up": "forestClearing",
+                "north": "maze4"
             }
         }
     }
