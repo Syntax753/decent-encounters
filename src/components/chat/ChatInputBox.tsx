@@ -2,6 +2,7 @@ import styles from './ChatInputBox.module.css';
 
 import ContentButton from '../contentButton/ContentButton';
 import { useEffect, useRef, useState } from "react";
+import { getInputHistory, recordInput } from '@/homeScreen/interactions/chat';
 
 type Props = {
   onSubmit: (text: string) => void,
@@ -16,18 +17,18 @@ function ChatInputBox(props: Props) {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-  const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
   function _onSubmit() {
     if (text.trim() === '') return;
     onSubmit(text);
-    setHistory(prev => [...prev, text]);
+    recordInput(text);
     setHistoryIndex(-1); // Reset index to end
     setText('');
   }
 
   function _onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    const history = getInputHistory();
     if (e.key === 'Enter') {
       _onSubmit();
     } else if (e.key === 'ArrowUp') {

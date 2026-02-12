@@ -24,6 +24,7 @@ let theSessionVariables: VariableManager | null = null;
 let currentLocation: string = '';
 let pruneCountForPendingTransition = 0;
 let theInventory: string[] = [];
+let theInputHistory: string[] = [];
 const allKnownItemNames: Set<string> = new Set();
 
 function _isLastLineGenerating(): boolean {
@@ -215,6 +216,9 @@ function _initForEncounter(encounter: Encounter, locationName: string) {
     theSessionVariables = new VariableManager(savedState.variables);
     console.log('[DEBUG] Restored variables:', theSessionVariables.toCollection());
 
+    // Restore input history
+    theInputHistory = savedState.inputHistory ?? [];
+
     // Restore history (this overwrites the empty array from clearChatHistory)
     setChatHistory(savedState.chatHistory);
 
@@ -232,6 +236,7 @@ function _initForEncounter(encounter: Encounter, locationName: string) {
   } else {
     console.log('Initializing fresh state for', locationName);
     theSessionVariables = new VariableManager();
+    theInputHistory = [];
     const systemMessage = _encounterToSystemMessage(encounter);
     setSystemMessage(systemMessage);
     // history is already cleared above
@@ -261,6 +266,14 @@ export function initChat(encounter: Encounter, setLines: Function) {
 
 export function getVariables(): VariableCollection {
   return !theSessionVariables ? {} : theSessionVariables.toCollection();
+}
+
+export function getInputHistory(): string[] {
+  return theInputHistory;
+}
+
+export function recordInput(prompt: string) {
+  theInputHistory.push(prompt);
 }
 
 export function updateEncounter(encounter: Encounter, setEncounter: Function, setModalDialogName: Function, setLines: Function, locationName: string) {
@@ -488,7 +501,8 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
         chatHistory: getChatHistory(),
         variables: theSessionVariables.toCollection(),
         location: currentLocation,
-        consoleLines: linesToSave
+        consoleLines: linesToSave,
+        inputHistory: theInputHistory
       };
       console.log(`[DEBUG] Leaving '${currentLocation}', saving state (pruned ${pruneCountForPendingTransition} lines):`, state);
       WorldManager.saveSceneState(currentLocation, state);
