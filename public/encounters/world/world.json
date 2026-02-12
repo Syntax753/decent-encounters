@@ -1,0 +1,17 @@
+{
+    "start": "westOfHouse",
+    "scenes": {
+        "westOfHouse": {
+            "file": "WestOfHouse.md"
+        },
+        "northOfHouse": {
+            "file": "NorthOfHouse.md"
+        },
+        "eastOfHouse": {
+            "file": "EastOfHouse.md"
+        },
+        "southOfHouse": {
+            "file": "SouthOfHouse.md"
+        }
+    }
+}

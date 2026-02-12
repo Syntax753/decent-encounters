@@ -21,7 +21,7 @@ import { addAssistantMessageToChatHistory, addUserMessageToChatHistory } from ".
 
 const UNSPECIFIED_MODEL_ID = 'UNSPECIFIED';
 
-let theConnection:LLMConnection = {
+let theConnection: LLMConnection = {
   modelId: UNSPECIFIED_MODEL_ID,
   state: LLMConnectionState.UNINITIALIZED,
   webLLMEngine: null,
@@ -29,15 +29,15 @@ let theConnection:LLMConnection = {
   connectionType: LLMConnectionType.NONE
 }
 
-let theMessages:LLMMessages = {
+let theMessages: LLMMessages = {
   chatHistory: [],
   maxChatHistorySize: 100,
   systemMessage: null
 };
 
-let savedMessages:LLMMessages|null = null;
+let savedMessages: LLMMessages | null = null;
 
-function _clearConnectionAndThrow(message:string) {
+function _clearConnectionAndThrow(message: string) {
   theConnection.webLLMEngine = null;
   theConnection.serverUrl = null;
   theConnection.connectionType = LLMConnectionType.NONE;
@@ -45,9 +45,9 @@ function _clearConnectionAndThrow(message:string) {
   throw new Error(message);
 }
 
-function _inputCharCount(prompt:string):number {
-  return prompt.length + 
-    (theMessages.systemMessage ? theMessages.systemMessage.length : 0) + 
+function _inputCharCount(prompt: string): number {
+  return prompt.length +
+    (theMessages.systemMessage ? theMessages.systemMessage.length : 0) +
     theMessages.chatHistory.reduce((acc, curr) => acc + curr.content.length, 0);
 }
 
@@ -55,17 +55,17 @@ function _inputCharCount(prompt:string):number {
   Public APIs
 */
 
-export function isLlmConnected():boolean {
+export function isLlmConnected(): boolean {
   return theConnection.state === LLMConnectionState.READY || theConnection.state === LLMConnectionState.GENERATING;
 }
 
 // Useful for app code that needs to use model-specific prompts or has other model-specific behavior.
-export function getConnectionModelId():string {
+export function getConnectionModelId(): string {
   if (theConnection.modelId === UNSPECIFIED_MODEL_ID) throw Error('Must connect before model ID can be known.');
   return theConnection.modelId;
 }
 
-export async function connect(modelId:string, onStatusUpdate:StatusUpdateCallback) {
+export async function connect(modelId: string, onStatusUpdate: StatusUpdateCallback) {
   if (isLlmConnected()) return;
   theConnection.state = LLMConnectionState.INITIALIZING;
   theConnection.modelId = modelId;
@@ -78,42 +78,50 @@ export async function connect(modelId:string, onStatusUpdate:StatusUpdateCallbac
   theConnection.state = LLMConnectionState.READY;
 }
 
-export function setSystemMessage(message:string|null) {
+export function setSystemMessage(message: string | null) {
   theMessages.systemMessage = message;
 }
 
-export function getSystemMessage():string|null {
+export function getSystemMessage(): string | null {
   return theMessages.systemMessage;
 }
 
-export function setChatHistorySize(size:number) {
+export function setChatHistorySize(size: number) {
   theMessages.maxChatHistorySize = size;
 }
 
 export function saveChatConfiguration() {
-  savedMessages = {...theMessages};
+  savedMessages = { ...theMessages };
 }
 
 export function restoreChatConfiguration() {
   if (!savedMessages) throw Error('No saved configuration.');
-  theMessages = {...savedMessages};
+  theMessages = { ...savedMessages };
 }
 
 export function clearChatHistory() {
   theMessages.chatHistory = [];
 }
 
-export function addAssistantMessage(message:string) {
+export function getChatHistory(): any[] {
+  return [...theMessages.chatHistory];
+}
+
+export function setChatHistory(history: any[]) {
+  theMessages.chatHistory = [...history];
+}
+
+export function addAssistantMessage(message: string) {
   addAssistantMessageToChatHistory(theMessages, message);
 }
 
-export function addUserMessage(message:string) {
+export function addUserMessage(message: string) {
   addUserMessageToChatHistory(theMessages, message);
 }
 
-export async function generate(prompt:string, onStatusUpdate:StatusUpdateCallback):Promise<string> {
+export async function generate(prompt: string, onStatusUpdate: StatusUpdateCallback): Promise<string> {
   let firstResponseTime = 0;
-  function _captureFirstResponse(status:string, percentComplete:number) {
+  function _captureFirstResponse(status: string, percentComplete: number) {
     if (!firstResponseTime) firstResponseTime = Date.now();
     onStatusUpdate(status, percentComplete);
   }
@@ -123,7 +131,7 @@ export async function generate(prompt:string, onStatusUpdate:StatusUpdateCallbac
   theConnection.state = LLMConnectionState.GENERATING;
   let message = '';
   let requestTime = Date.now();
-  switch(theConnection.connectionType) {
+  switch (theConnection.connectionType) {
     case LLMConnectionType.WEBLLM: message = await webLlmGenerate(theConnection, theMessages, prompt, _captureFirstResponse); break;
     default: throw Error('Unexpected');
   }

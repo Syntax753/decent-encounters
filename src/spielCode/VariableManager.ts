@@ -1,24 +1,24 @@
 export type VariableCollection = {
-  [key:string]: any;
+  [key: string]: any;
 };
 
 class VariableManager {
   _localVariables: VariableCollection;
-  
-  constructor() {
-    this._localVariables = {};
+
+  constructor(initialVariables?: VariableCollection) {
+    this._localVariables = initialVariables ? { ...initialVariables } : {};
   }
-  
-  get(key:string):any {
+
+  get(key: string): any {
     return this._localVariables[key];
   }
-  
-  set(key:string, value:any):void {
+
+  set(key: string, value: any): void {
     this._localVariables[key] = value;
   }
 
-  toCollection():VariableCollection {
-    return {...this._localVariables};
+  toCollection(): VariableCollection {
+    return { ...this._localVariables };
   }
 }
 

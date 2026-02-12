@@ -12,6 +12,8 @@ import ContentButton from "@/components/contentButton/ContentButton";
 import EncounterConfigDialog from "./dialogs/EncounterConfigDialog";
 import DiagnosticDialog from "./dialogs/DiagnosticDialog";
 import { importEncounterFile } from "./interactions/import";
+import { loadEncounter } from "@/encounters/encounterUtil";
+import WorldManager from "@/encounters/WorldManager";
 import { downloadEncounter } from "./interactions/export";
 import AboutDialog from "./dialogs/AboutDialog";
 import WrongModelDialog from "./dialogs/WrongModelDialog";
@@ -19,34 +21,50 @@ import WrongModelDialog from "./dialogs/WrongModelDialog";
 function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [lines, setLines] = useState<TextConsoleLine[]>([]);
-  const [encounter, setEncounter] = useState<Encounter|null>(null);
-  const [modalDialogName, setModalDialogName] = useState<string|null>(null);
-  
+  const [encounter, setEncounter] = useState<Encounter | null>(null);
+  const [modalDialogName, setModalDialogName] = useState<string | null>(null);
+  const [isWaitingForTransition, setIsWaitingForTransition] = useState<boolean>(false);
+  const [location, setLocation] = useState<string>('');
+
   useEffect(() => {
     if (isLoading) return;
 
-    init(setEncounter, setLines, setModalDialogName).then(isLlmConnected => { 
-      if (!isLlmConnected) { setIsLoading(true); return; }
+    init(setEncounter, setLines, setModalDialogName).then(result => {
+      if (!result.success) { setIsLoading(true); return; }
+      if (result.startLocation) setLocation(result.startLocation);
     });
   }, [isLoading]);
 
   if (isLoading) return <LoadScreen onComplete={() => setIsLoading(false)} />;
   if (!encounter) return null;
-  
+
   return (
     <div className={styles.container}>
-      <TopBar onAboutClick={() => setModalDialogName(AboutDialog.name)}/>
+      <TopBar onAboutClick={() => setModalDialogName(AboutDialog.name)} />
       <div className={styles.content}>
         <h1>{encounter.title}</h1>
-        <Chat className={styles.chat} lines={lines} onChatInput={(prompt) => submitPrompt(prompt, setLines)} />
+        <Chat
+          key={encounter.title}
+          className={styles.chat}
+          lines={lines}
+          isWaiting={isWaitingForTransition}
+          onChatInput={(prompt) => submitPrompt(prompt, setLines, async (nextLocation: string) => {
+            const nextEncounter = await loadEncounter(WorldManager.getEncounterPath(nextLocation));
+            setLocation(nextLocation);
+            updateEncounter(nextEncounter, setEncounter, setModalDialogName, setLines, nextLocation);
+          }, setIsWaitingForTransition)}
+        />
       </div>
       <div className={styles.encounterActions}>
         <h1>Encounter</h1>
-        <ContentButton onClick={() => restartEncounter(encounter, setLines)} text="Restart"/>
+        <ContentButton onClick={() => restartEncounter(encounter, setLines)} text="Restart" />
         <ContentButton onClick={() => setModalDialogName(EncounterConfigDialog.name)} text="Edit" />
-        <ContentButton onClick={async () => { 
+        <ContentButton onClick={async () => {
           const nextEncounter = await importEncounterFile();
-          if (nextEncounter) updateEncounter(nextEncounter, setEncounter, setModalDialogName, setLines);
+          if (nextEncounter) {
+            setLocation(''); // Imported encounters don't have a world location
+            updateEncounter(nextEncounter, setEncounter, setModalDialogName, setLines, '');
+          }
         }} text="Import" />
         <ContentButton onClick={() => downloadEncounter(encounter)} text="Download" />
         <ContentButton onClick={() => setModalDialogName(DiagnosticDialog.name)} text="Diagnostics" />
@@ -55,7 +73,7 @@ function HomeScreen() {
         isOpen={modalDialogName === EncounterConfigDialog.name}
         encounter={encounter}
         onCancel={() => setModalDialogName(null)}
-        onSave={(nextEncounter:Encounter) => { updateEncounter(nextEncounter, setEncounter, setModalDialogName, setLines); }}
+        onSave={(nextEncounter: Encounter) => { updateEncounter(nextEncounter, setEncounter, setModalDialogName, setLines, location); }}
       />
       <DiagnosticDialog
         isOpen={modalDialogName === DiagnosticDialog.name}

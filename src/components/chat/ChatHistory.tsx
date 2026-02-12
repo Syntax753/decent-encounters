@@ -7,13 +7,13 @@ export const PLAYER_PREFIX = 'PLAYER:';
 export const NARRATION_PREFIX = 'NARRATION:';
 
 type Props = {
-  lines:TextConsoleLine[]
+  lines: TextConsoleLine[]
 }
 
-function _onRenderLine(key:number, text:string) {
+function _onRenderLine(key: number, text: string) {
   let className = '';
   if (text === '...') {
-    return <WaitingEllipsis />
+    return <WaitingEllipsis key={key} />
   } else if (text.startsWith(PLAYER_PREFIX)) {
     text = text.substring(PLAYER_PREFIX.length);
     className = styles.playerLine;
@@ -25,15 +25,15 @@ function _onRenderLine(key:number, text:string) {
   }
   if (text.endsWith('...')) {
     text = text.substring(0, text.length - 3);
-    return (<p className={className} key={key}>{text}<WaitingEllipsis trailing/></p>);
+    return (<p className={className} key={key}>{text}<WaitingEllipsis trailing /></p>);
   } else {
     return (<p className={className} key={key}>{text}</p>);
   }
 }
 
-function ChatHistory(props:Props) {
+function ChatHistory(props: Props) {
   const { lines } = props;
-  
+
   return (
     <TextConsole className={styles.container} lines={lines} onRenderLine={_onRenderLine} />
   );
