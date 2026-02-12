@@ -582,6 +582,25 @@ function _handleLocalDrop(prompt: string): boolean {
   return true;
 }
 
+const LOOK_PATTERNS = ['look', 'l', 'look around'];
+
+function _handleLocalLook(prompt: string): boolean {
+  const cleanPrompt = prompt.trim().toLowerCase();
+  if (!LOOK_PATTERNS.includes(cleanPrompt)) return false;
+
+  assertNonNullable(theChatBuffer);
+  _addPlayerLine(prompt);
+
+  if (theEncounter) {
+    const description = _getSceneDescription(theEncounter);
+    _addNarrationLine(description);
+    _displayAvailableItems();
+    _displayExitDirections();
+  }
+
+  return true;
+}
+
 const _toTitleCase = (str: string) => {
   return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
@@ -689,6 +708,12 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
 
   // Attempt to handle item verb command (look at X, open X, read X)
   if (_handleItemVerb(prompt)) {
+    setLines(theChatBuffer.lines);
+    return;
+  }
+
+  // Attempt to handle global look command
+  if (_handleLocalLook(prompt)) {
     setLines(theChatBuffer.lines);
     return;
   }
