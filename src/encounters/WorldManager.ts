@@ -55,6 +55,13 @@ class WorldManager {
         return scene.directions[direction.toLowerCase()] || null;
     }
 
+    getDirections(location: string): string[] {
+        assert(this._worldDef !== null);
+        const scene = this._worldDef.scenes[location];
+        if (!scene || !scene.directions) return [];
+        return Object.keys(scene.directions);
+    }
+
     saveSceneState(location: string, state: SceneState) {
         this._sceneStates[location] = state;
     }

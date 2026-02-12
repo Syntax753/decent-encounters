@@ -232,6 +232,7 @@ function _initForEncounter(encounter: Encounter, locationName: string) {
     const returnMessage = `[System]: You have returned to ${encounter.title}. The previous conversation here is restored. Respond as if you are in this location.`;
     _addNarrationLine(`(You return to: ${encounter.title})`);
     _displayAvailableItems();
+    _displayExitDirections();
     addAssistantMessage(returnMessage);
   } else {
     console.log('Initializing fresh state for', locationName);
@@ -242,6 +243,7 @@ function _initForEncounter(encounter: Encounter, locationName: string) {
     // history is already cleared above
     _handleActions(encounter.startActions);
     _displayAvailableItems();
+    _displayExitDirections();
   }
   console.log(`[DEBUG] Scene State for '${locationName}':`, {
     location: locationName,
@@ -406,6 +408,14 @@ function _displayAvailableItems() {
   const available = _getAvailableItemsInScene();
   if (available.length > 0) {
     _addNarrationLine(`You see ${available.join(', ')} here.`);
+  }
+}
+
+function _displayExitDirections() {
+  const dirs = WorldManager.getDirections(currentLocation);
+  if (dirs.length > 0) {
+    const capitalized = dirs.map(d => d.charAt(0).toUpperCase() + d.slice(1));
+    _addNarrationLine(`You can head ${capitalized.join(', ')} from here.`);
   }
 }
 

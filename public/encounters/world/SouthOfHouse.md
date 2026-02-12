@@ -6,7 +6,7 @@
 
 # Start
 
-_You are standing in an open field south of a white house, with a boarded window._
+_You are facing the south side of a white house. There is no door here, and all the windows are boarded._
 _The Queen of Hearts is sitting on the window ledge, looking very sad._
 
 > Oh... hello there. I'm feeling a bit down today.|I'm feeling a bit down today.

@@ -1,13 +1,13 @@
 <!-- Encounter v0.1 -->
 # General
 
-* title=East of House
+* title=Behind House
 * model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k
 
 # Start
 
-_You are standing in an open field east of a white house._
-_A small stream flows through the field._
+_You are behind the white house. A path leads into the forest to the east._
+_In one corner of the house there is a small window which is slightly ajar._
 
 > A nymph is sitting on a rock in the stream.
 

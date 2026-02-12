@@ -5,20 +5,19 @@
             "scene": "westOfHouse",
             "directions": {
                 "north": "northOfHouse",
-                "south": "southOfHouse",
-                "east": "eastOfHouse"
+                "south": "southOfHouse"
             }
         },
         "northOfHouse": {
             "scene": "northOfHouse",
             "directions": {
                 "west": "westOfHouse",
-                "east": "eastOfHouse",
+                "east": "behindHouse",
                 "north": "forestPath"
             }
         },
-        "eastOfHouse": {
-            "scene": "eastOfHouse",
+        "behindHouse": {
+            "scene": "behindHouse",
             "directions": {
                 "north": "northOfHouse",
                 "south": "southOfHouse",
@@ -30,7 +29,7 @@
             "scene": "southOfHouse",
             "directions": {
                 "west": "westOfHouse",
-                "east": "eastOfHouse"
+                "east": "behindHouse"
             }
         },
         "kitchen": {
@@ -38,7 +37,7 @@
             "directions": {
                 "west": "livingRoom",
                 "up": "attic",
-                "east": "eastOfHouse"
+                "east": "behindHouse"
             }
         },
         "livingRoom": {
@@ -80,7 +79,7 @@
             "scene": "clearing",
             "directions": {
                 "east": "canyonView",
-                "west": "eastOfHouse"
+                "west": "behindHouse"
             }
         },
         "canyonView": {
