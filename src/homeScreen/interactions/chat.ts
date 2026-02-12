@@ -24,6 +24,7 @@ let theSessionVariables: VariableManager | null = null;
 let currentLocation: string = '';
 let pruneCountForPendingTransition = 0;
 let theInventory: string[] = [];
+const allKnownItemNames: Set<string> = new Set();
 
 function _isLastLineGenerating(): boolean {
   assertNonNullable(theChatBuffer);
@@ -226,6 +227,7 @@ function _initForEncounter(encounter: Encounter, locationName: string) {
 
     const returnMessage = `[System]: You have returned to ${encounter.title}. The previous conversation here is restored. Respond as if you are in this location.`;
     _addNarrationLine(`(You return to: ${encounter.title})`);
+    _displayAvailableItems();
     addAssistantMessage(returnMessage);
   } else {
     console.log('Initializing fresh state for', locationName);
@@ -234,6 +236,7 @@ function _initForEncounter(encounter: Encounter, locationName: string) {
     setSystemMessage(systemMessage);
     // history is already cleared above
     _handleActions(encounter.startActions);
+    _displayAvailableItems();
   }
   console.log(`[DEBUG] Scene State for '${locationName}':`, {
     location: locationName,
@@ -336,6 +339,120 @@ function _checkForInventoryAdd() {
   }
 }
 
+const PICKUP_PATTERNS = ['get ', 'take ', 'pick up '];
+
+function _handleLocalPickup(prompt: string): boolean {
+  const cleanPrompt = prompt.trim().toLowerCase();
+
+  let itemName: string | null = null;
+  for (const pattern of PICKUP_PATTERNS) {
+    if (cleanPrompt.startsWith(pattern)) {
+      itemName = cleanPrompt.substring(pattern.length).trim();
+      break;
+    }
+  }
+  if (!itemName) return false;
+
+  assertNonNullable(theChatBuffer);
+  _addPlayerLine(prompt);
+
+  // Check if item is available in this scene (via +item action or drop)
+  const varName = `__item_available_${itemName}`;
+  const isAvailable = theSessionVariables && theSessionVariables.get(varName) === true;
+  if (!isAvailable) {
+    _addNarrationLine("You don't see that here.");
+    return true;
+  }
+
+  // Pick up the item
+  if (!theInventory.includes(itemName)) {
+    theInventory.push(itemName);
+    allKnownItemNames.add(itemName);
+  }
+  theSessionVariables!.set(varName, false); // No longer on the ground
+  _addNarrationLine(`Taken.`);
+  return true;
+}
+
+function _getAvailableItemsInScene(): string[] {
+  if (!theSessionVariables) return [];
+  const vars = theSessionVariables.toCollection();
+  const items: string[] = [];
+  const prefix = '__item_available_';
+  for (const key of Object.keys(vars)) {
+    if (key.startsWith(prefix) && vars[key] === true) {
+      const name = key.substring(prefix.length);
+      items.push(name);
+      allKnownItemNames.add(name);
+    }
+  }
+  return items;
+}
+
+function _displayAvailableItems() {
+  const available = _getAvailableItemsInScene();
+  if (available.length > 0) {
+    _addNarrationLine(`You see ${available.join(', ')} here.`);
+  }
+}
+
+const DROP_PATTERNS = ['drop ', 'put down '];
+
+function _handleLocalDrop(prompt: string): boolean {
+  const cleanPrompt = prompt.trim().toLowerCase();
+
+  let itemName: string | null = null;
+  for (const pattern of DROP_PATTERNS) {
+    if (cleanPrompt.startsWith(pattern)) {
+      itemName = cleanPrompt.substring(pattern.length).trim();
+      break;
+    }
+  }
+  if (!itemName) return false;
+
+  assertNonNullable(theChatBuffer);
+  _addPlayerLine(prompt);
+
+  const idx = theInventory.findIndex(i => i.toLowerCase() === itemName);
+  if (idx === -1) {
+    _addNarrationLine("You don't have that.");
+    return true;
+  }
+
+  // Remove from inventory
+  theInventory.splice(idx, 1);
+
+  // Make item available in current scene
+  if (theSessionVariables) {
+    const varName = `__item_available_${itemName}`;
+    theSessionVariables.set(varName, true);
+  }
+
+  _addNarrationLine('Dropped.');
+  return true;
+}
+
+function _checkItemReference(prompt: string): string | null {
+  const cleanPrompt = prompt.trim().toLowerCase();
+
+  // Also register current scene items into the global set
+  for (const item of (theEncounter?.sceneItems ?? [])) {
+    allKnownItemNames.add(item.toLowerCase());
+  }
+
+  // Check ALL known items globally — not just the current scene
+  for (const itemLower of allKnownItemNames) {
+    if (cleanPrompt.includes(itemLower)) {
+      const inInventory = theInventory.some(i => i.toLowerCase() === itemLower);
+      const onGround = theSessionVariables && theSessionVariables.get(`__item_available_${itemLower}`) === true;
+      if (!inInventory && !onGround) {
+        return itemLower;
+      }
+    }
+  }
+  return null;
+}
+
 export async function submitPrompt(prompt: string, setLines: Function, onSceneChange?: (location: string) => void, setWaiting?: (waiting: boolean) => void) {
   if (!isLlmConnected()) {
     const message = isServingLocally()
@@ -388,6 +505,27 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
 
   // Attempt to handle inventory command locally
   if (_handleLocalInventory(prompt)) {
+    setLines(theChatBuffer.lines);
+    return;
+  }
+
+  // Attempt to handle pickup command locally
+  if (_handleLocalPickup(prompt)) {
+    setLines(theChatBuffer.lines);
+    return;
+  }
+
+  // Attempt to handle drop command locally
+  if (_handleLocalDrop(prompt)) {
+    setLines(theChatBuffer.lines);
+    return;
+  }
+
+  // Check if prompt references an item the player doesn't have
+  const missingItem = _checkItemReference(prompt);
+  if (missingItem) {
+    _addPlayerLine(prompt);
+    _addNarrationLine("You don't have that.");
     setLines(theChatBuffer.lines);
     return;
   }

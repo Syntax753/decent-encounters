@@ -1,7 +1,7 @@
 import styles from './ChatInputBox.module.css';
 
 import ContentButton from '../contentButton/ContentButton';
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   onSubmit: (text: string) => void,
@@ -11,6 +11,11 @@ type Props = {
 function ChatInputBox(props: Props) {
   const { onSubmit, disabled } = props;
   const [text, setText] = useState<string>('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
@@ -49,7 +54,7 @@ function ChatInputBox(props: Props) {
 
   return (
     <div className={styles.container}>
-      <input className={styles.textInput} type="text" placeholder={'Say something...'} value={text}
+      <input ref={inputRef} className={styles.textInput} type="text" placeholder={'Say something...'} value={text}
         onChange={(e) => setText(e.target.value)} onKeyDown={_onKeyDown} disabled={disabled} autoFocus />
       <ContentButton onClick={_onSubmit} text="Submit" disabled={disabled} />
     </div>

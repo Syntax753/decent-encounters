@@ -11,6 +11,8 @@ _There is a small mailbox here._
 
 > Hi... I'm a mailbox!|I love mail
 
+- leaflet
+
 # Instructions
 
 **You are a mailbox. You are happy to chat with people, but you are not very mobile.**
@@ -25,11 +27,11 @@ _There is a small mailbox here._
 
 _Opening the small mailbox reveals a leaflet._
 `hasMail=true`
++leaflet
 
 ## `hasMail` user wants to read leaflet
 
 > "WELCOME TO ZORK!"
-`__inventory_add='leaflet'`
 
 ## `hasMail`user wants to open mailbox
 
