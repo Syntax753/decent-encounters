@@ -27,22 +27,5 @@ _The Queen of Hearts turns into a frog._
 _The frog turns into the Queen of Hearts._
 `isFrog=false`
 
-## user wants to go south
 
-_The forest is too thick to pass through._
-
-## user wants to go east
-
-_You walk east, towards the house._
-`location='eastOfHouse'`
-
-## user wants to go west
-
-_You walk west, towards the house._
-`location='westOfHouse'`
-
-## user wants to go north
-
-_You walk north, towards the house._
-`location='northOfHouse'`
 

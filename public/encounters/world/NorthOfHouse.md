@@ -23,23 +23,6 @@ _Humpty Dumpty is sitting on the wall._
 _Oh no! Humpty Dumpty falls off the wall._
 `humptyBroken=true`
 
-## user wants to go south
 
-_You walk south, towards the house._
-`location='southOfHouse'`
-
-## user wants to go east
-
-_You walk east, towards the house._
-`location='eastOfHouse'`
-
-## user wants to go west
-
-_You walk west, towards the house._
-`location='westOfHouse'`
-
-## user wants to go north
-
-_The forest is too thick to pass through._
 
 

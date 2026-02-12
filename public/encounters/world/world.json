@@ -2,16 +2,35 @@
     "start": "westOfHouse",
     "scenes": {
         "westOfHouse": {
-            "file": "WestOfHouse.md"
+            "scene": "westOfHouse",
+            "directions": {
+                "north": "northOfHouse",
+                "south": "southOfHouse",
+                "east": "eastOfHouse"
+            }
         },
         "northOfHouse": {
-            "file": "NorthOfHouse.md"
+            "scene": "northOfHouse",
+            "directions": {
+                "west": "westOfHouse",
+                "east": "eastOfHouse"
+            }
         },
         "eastOfHouse": {
-            "file": "EastOfHouse.md"
+            "scene": "eastOfHouse",
+            "directions": {
+                "north": "northOfHouse",
+                "south": "southOfHouse",
+                "west": "westOfHouse"
+            }
         },
         "southOfHouse": {
-            "file": "SouthOfHouse.md"
+            "scene": "southOfHouse",
+            "directions": {
+                "north": "northOfHouse",
+                "east": "eastOfHouse",
+                "west": "westOfHouse"
+            }
         }
     }
 }

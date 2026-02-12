@@ -62,11 +62,14 @@ function _addGeneratingLine() {
 
 function _onUpdateResponse(responseText: string, setLines: Function) {
   assertNonNullable(theChatBuffer);
-  const displayText = stripTriggerCodes(responseText);
+  // Pass triggers to ensure we don't show partial codes during streaming
+  const triggers = theEncounter ? theEncounter.characterTriggers : [];
+  const displayText = stripTriggerCodes(responseText, triggers);
   _addChatBufferLine(`${displayText}${GENERATING}`);
   setLines(theChatBuffer.lines)
 }
 
+// ...
 function _actionCriteriaMet(criteria: Code | null): boolean {
   if (!criteria) return true;
   assertNonNullable(theSessionVariables);
@@ -133,10 +136,18 @@ function _finalizeResponse(responseText: string): boolean {
   if (characterTrigger) {
     characterTrigger.isEnabled = false; // Prevent the same trigger from firing again in the future, unless it's re-enabled by the encounter's logic.
     console.log('Finalize: Trigger found', characterTrigger.triggerCode);
+
+    // Remove the "Generating..." line (or the streamed trigger code) from the buffer
+    // since we are handling this as a hidden action.
+    theChatBuffer.removeLastLine();
+
     const { reprocess } = _handleActions(characterTrigger.actions);
     return reprocess;
   } else {
-    const displayText = stripTriggerCodes(responseText);
+    // Replace the "Generating..." line with the final text
+    theChatBuffer.removeLastLine();
+
+    const displayText = stripTriggerCodes(responseText, theEncounter.characterTriggers);
     _addCharacterLine(displayText);
     return false;
   }
@@ -147,9 +158,30 @@ function _encounterToSystemMessage(encounter: Encounter): string { // TODO facto
   assertNonNullable(theSessionVariables);
   enableConditionalCharacterTriggers(theEncounter.characterTriggers, theSessionVariables);
   let { systemMessage } = _handleActions(encounter.instructionActions);
-  for (let i = 0; i < encounter.characterTriggers.length; ++i) {
-    const { criteria, triggerCode, isEnabled } = encounter.characterTriggers[i];
-    if (!isEnabled) continue;
+
+  // Filter triggers to handle specificity overrides
+  const activeTriggers = encounter.characterTriggers.filter(t => t.isEnabled);
+  const criteriaMap = new Map<string, CharacterTrigger[]>();
+
+  activeTriggers.forEach(t => {
+    if (!criteriaMap.has(t.criteria)) criteriaMap.set(t.criteria, []);
+    criteriaMap.get(t.criteria)!.push(t);
+  });
+
+  const finalTriggers: CharacterTrigger[] = [];
+  criteriaMap.forEach((triggers) => {
+    // If we have multiple triggers for the same text criteria:
+    // Prefer those that had a condition (enabledCriteria != null) over those that didn't.
+    const conditionalTriggers = triggers.filter(t => t.enabledCriteria !== null);
+    if (conditionalTriggers.length > 0) {
+      finalTriggers.push(...conditionalTriggers);
+    } else {
+      finalTriggers.push(...triggers);
+    }
+  });
+
+  for (let i = 0; i < finalTriggers.length; ++i) {
+    const { criteria, triggerCode } = finalTriggers[i];
     systemMessage += `\nIf the user's intent is to ${criteria} (or they type it directly) then output ONLY @${triggerCode}.`;
   }
   systemMessage += '\nOtherwise, respond based on the context.';
@@ -179,6 +211,7 @@ function _initForEncounter(encounter: Encounter, locationName: string) {
   if (savedState) {
     console.log('Restoring state for', locationName);
     theSessionVariables = new VariableManager(savedState.variables);
+    console.log('[DEBUG] Restored variables:', theSessionVariables.toCollection());
 
     // Restore history (this overwrites the empty array from clearChatHistory)
     setChatHistory(savedState.chatHistory);
@@ -240,12 +273,49 @@ export function restartEncounter(encounter: Encounter, setLines: Function) {
   setLines(theChatBuffer.lines);
 }
 
+const DIRECTION_MAP: { [key: string]: string } = {
+  'n': 'north', 'north': 'north', 'go north': 'north', 'walk north': 'north',
+  's': 'south', 'south': 'south', 'go south': 'south', 'walk south': 'south',
+  'e': 'east', 'east': 'east', 'go east': 'east', 'walk east': 'east',
+  'w': 'west', 'west': 'west', 'go west': 'west', 'walk west': 'west',
+  'ne': 'northeast', 'northeast': 'northeast',
+  'nw': 'northwest', 'northwest': 'northwest',
+  'se': 'southeast', 'southeast': 'southeast',
+  'sw': 'southwest', 'southwest': 'southwest',
+};
+
+function _handleLocalMovement(prompt: string): 'success' | 'blocked' | null {
+  const cleanPrompt = prompt.trim().toLowerCase().replace(/[^a-z ]/g, ''); // simple clean
+  const direction = DIRECTION_MAP[cleanPrompt];
+
+  if (!direction) return null;
+
+  assertNonNullable(theChatBuffer);
+  _addPlayerLine(prompt); // Echo the command here since we return early
+
+  const dest = WorldManager.getDestination(currentLocation, direction);
+  if (dest) {
+    _addNarrationLine(`You walk ${direction}.`);
+    assertNonNullable(theSessionVariables);
+    theSessionVariables.set('location', dest);
+    return 'success';
+  } else {
+    _addNarrationLine('The forest is too thick to pass through.');
+    return 'blocked';
+  }
+}
+
 export async function submitPrompt(prompt: string, setLines: Function, onSceneChange?: (location: string) => void, setWaiting?: (waiting: boolean) => void) {
   if (!isLlmConnected()) {
     const message = isServingLocally()
       ? `LLM is not connected. You're in a dev environment where this is expected (hot reloads, canceling the LLM load). You can refresh the page to load the LLM.`
       : 'LLM is not connected. Try refreshing the page.';
     console.error(message);
+    return;
+  }
+
+  if (!theChatBuffer) {
+    console.warn("Chat buffer is missing. This usually happens after a hot reload in development. Please refresh the page.");
     return;
   }
 
@@ -285,6 +355,24 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
 
   pruneCountForPendingTransition = 0; // Reset for normal turn
 
+  // Attempt to handle movement locally, bypassing LLM for speed and reliability
+  const localMoveResult = _handleLocalMovement(prompt);
+  if (localMoveResult) {
+    if (localMoveResult === 'success') {
+      // Transition will be handled by the effect hook (via onSceneChange check at end or next render)
+      // But wait, we need to trigger the "Press Enter" state.
+
+      if (theSessionVariables && theSessionVariables.get('location') && onSceneChange) {
+        _addNarrationLine('(Press Enter to continue)');
+        pruneCountForPendingTransition = 3;
+
+        if (setWaiting) setWaiting(true);
+      }
+    }
+    setLines(theChatBuffer.lines);
+    return;
+  }
+
   _addPlayerLine(prompt);
   const preResponseLineCount = theChatBuffer.lines.length;
 
@@ -298,6 +386,22 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
       const fullResponseText = await generate(prompt, (responseText: string) => _onUpdateResponse(responseText, setLines));
       const reprocess = _finalizeResponse(fullResponseText);
       setLines(theChatBuffer.lines);
+
+      if (theSessionVariables) {
+        const direction = theSessionVariables.get('__intent_direction');
+        if (direction) {
+          theSessionVariables.set('__intent_direction', null); // Consume
+          const dest = WorldManager.getDestination(currentLocation, direction);
+          if (dest) {
+            _addNarrationLine(`You walk ${direction}.`); // Mirroring standard behavior
+            theSessionVariables.set('location', dest);
+            break; // Stop processing, triggers scene change
+          } else {
+            _addNarrationLine('The forest is too thick to pass through.');
+          }
+        }
+      }
+
       if (!reprocess) break;
     } catch (e) {
       console.error('Error while generating response.', e);

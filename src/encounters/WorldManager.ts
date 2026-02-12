@@ -3,6 +3,7 @@ import { assert } from "decent-portal";
 
 type SceneDef = {
     file: string;
+    directions?: { [key: string]: string };
 };
 
 type WorldDef = {
@@ -44,7 +45,14 @@ class WorldManager {
         assert(this._worldDef !== null);
         const scene = this._worldDef.scenes[location];
         if (!scene) throw Error(`Scene not found for location: ${location}`);
-        return `${this._basePath}${scene.file}`;
+        return `${this._basePath}${scene.scene}.md`;
+    }
+
+    getDestination(currentLocation: string, direction: string): string | null {
+        assert(this._worldDef !== null);
+        const scene = this._worldDef.scenes[currentLocation];
+        if (!scene || !scene.directions) return null;
+        return scene.directions[direction.toLowerCase()] || null;
     }
 
     saveSceneState(location: string, state: SceneState) {

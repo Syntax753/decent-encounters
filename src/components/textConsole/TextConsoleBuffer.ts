@@ -23,6 +23,11 @@ class TextConsoleBuffer {
     this.addLine(text);
   }
 
+  removeLastLine() {
+    if (this._lines.length === 0) return;
+    this._lines.pop();
+  }
+
   clear() {
     this._lines = [];
   }

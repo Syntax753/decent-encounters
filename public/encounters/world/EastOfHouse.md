@@ -19,22 +19,5 @@ _A small stream flows through the field._
 **Your favorite color is blue**
 **All of your responses should be less than 20 words long.**
 
-## user wants to go south
 
-_You walk south, towards the house._
-`location='southOfHouse'`
-
-## user wants to go east
-
-_The forest is too thick to pass through._
-
-## user wants to go west
-
-_You walk west, towards the house._
-`location='westOfHouse'`
-
-## user wants to go north
-
-_You walk north, towards the house._
-`location='northOfHouse'`
 
