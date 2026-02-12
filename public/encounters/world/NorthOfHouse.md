@@ -10,6 +10,7 @@ _You are facing the north side of a white house. There is no door here, and all 
 _To the north a narrow path winds through the trees._
 _Humpty Dumpty is sitting on a wall nearby, looking a bit wobbly._
 
+@Humpty Dumpty
 > Humpty Dumpty is sitting on the wall.|Humpty Dumpty is looking a bit wobbly today.
 
 # Instructions

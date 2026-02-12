@@ -81,10 +81,11 @@ function _parseActions(sectionContent: string): Action[] {
   return actions;
 }
 
-function _parseStartSection(startSection?: string): { actions: Action[], items: string[] } {
-  if (!startSection) return { actions: [], items: [] };
+function _parseStartSection(startSection?: string): { actions: Action[], items: string[], characters: string[] } {
+  if (!startSection) return { actions: [], items: [], characters: [] };
   const actions: Action[] = [];
   const items: string[] = [];
+  const characters: string[] = [];
   const lines = startSection.split('\n');
   for (const line of lines) {
     if (line.startsWith('- ')) {
@@ -100,12 +101,17 @@ function _parseStartSection(startSection?: string): { actions: Action[], items: 
           actions.push({ actionType: ActionType.CODE, code });
         }
       }
+    } else if (line.startsWith('@')) {
+      const charName = line.substring(1).trim();
+      if (charName.length > 0) {
+        characters.push(charName);
+      }
     } else {
       const action = _lineToAction(line);
       if (action) actions.push(action);
     }
   }
-  return { actions, items };
+  return { actions, items, characters };
 }
 
 function _parseTriggerSectionName(triggerSectionName: string): { criteria: string, enabledCriteria: Code | null } {
@@ -146,10 +152,10 @@ export function textToEncounter(text: string): Encounter {
   const title = generalSettings.title || 'Untitled Encounter';
   const model = generalSettings.model || 'default';
 
-  const { actions: startActions, items: sceneItems } = _parseStartSection(sections.Start);
+  const { actions: startActions, items: sceneItems, characters } = _parseStartSection(sections.Start);
   const [instructionActions, characterTriggers] = _parseInstructionSection(sections.Instructions);
 
   return {
-    version, title, model, startActions, instructionActions, characterTriggers, sceneItems, sourceText: text
+    version, title, model, startActions, instructionActions, characterTriggers, sceneItems, characters, sourceText: text
   };
 }

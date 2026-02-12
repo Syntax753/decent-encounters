@@ -4,10 +4,6 @@
             "look": "A small leaflet with writing on it.",
             "read": "\"WELCOME TO ZORK!\n\nZORK is a game of adventure, danger, and low cunning. In it you will explore some of the most amazing territory ever seen by mortals. No computer should be without one!\""
         },
-        "mailbox": {
-            "look": "A small mailbox with the flag down.",
-            "open": "Opening the small mailbox reveals a leaflet."
-        },
         "sack": {
             "look": "An elongated brown sack, smelling of hot peppers.",
             "open": "Opening the brown sack reveals a lunch, and a clove of garlic."

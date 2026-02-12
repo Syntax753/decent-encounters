@@ -9,6 +9,7 @@
 _You are facing the south side of a white house. There is no door here, and all the windows are boarded._
 _The Queen of Hearts is sitting on the window ledge, looking very sad._
 
+@Queen of Hearts
 > Oh... hello there. I'm feeling a bit down today.|I'm feeling a bit down today.
 
 # Instructions

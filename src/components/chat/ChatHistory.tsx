@@ -5,6 +5,7 @@ import WaitingEllipsis from "../waitingEllipsis/WaitingEllipsis";
 
 export const PLAYER_PREFIX = 'PLAYER:';
 export const NARRATION_PREFIX = 'NARRATION:';
+export const ASCII_ART_PREFIX = 'ASCII_ART:';
 
 type Props = {
   lines: TextConsoleLine[]
@@ -20,6 +21,9 @@ function _onRenderLine(key: number, text: string) {
   } else if (text.startsWith(NARRATION_PREFIX)) {
     text = text.substring(NARRATION_PREFIX.length);
     className = styles.narrativeLine;
+  } else if (text.startsWith(ASCII_ART_PREFIX)) {
+    text = text.substring(ASCII_ART_PREFIX.length);
+    className = styles.asciiArtLine;
   } else {
     className = styles.characterLine;
   }

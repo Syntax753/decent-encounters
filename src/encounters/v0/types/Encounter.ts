@@ -9,6 +9,7 @@ type EncounterV0 = {
   instructionActions: Action[],
   characterTriggers: CharacterTrigger[],
   sceneItems: string[],
+  characters: string[],
   sourceText: string | null // For authoring use cases, source text is needed to preserve comments and formatting. For playback-only use cases, this can be null.
 }
 

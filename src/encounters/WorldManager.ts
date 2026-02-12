@@ -64,6 +64,11 @@ class WorldManager {
         return this._worldDef.start;
     }
 
+    getAllScenes(): { [key: string]: SceneDef } {
+        assert(this._worldDef !== null);
+        return this._worldDef.scenes;
+    }
+
     getEncounterPath(location: string): string {
         assert(this._worldDef !== null);
         const scene = this._worldDef.scenes[location];

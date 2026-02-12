@@ -1,6 +1,6 @@
 import { assertNonNullable } from "decent-portal";
 
-import { NARRATION_PREFIX, PLAYER_PREFIX } from "@/components/chat/ChatHistory";
+import { ASCII_ART_PREFIX, NARRATION_PREFIX, PLAYER_PREFIX } from "@/components/chat/ChatHistory";
 import TextConsoleBuffer from "@/components/textConsole/TextConsoleBuffer";
 import { isServingLocally } from "@/developer/devEnvUtil";
 import { enableConditionalCharacterTriggers, findCharacterTriggerInText, stripTriggerCodes } from "@/encounters/encounterUtil";
@@ -12,6 +12,13 @@ import { executeCode } from "@/spielCode/codeUtil";
 import VariableManager, { VariableCollection } from "@/spielCode/VariableManager";
 import Code from "@/spielCode/types/Code";
 import WorldManager from "@/encounters/WorldManager";
+import { generateSceneArt } from "@/encounters/sceneArt";
+
+// ... existing code ...
+
+
+
+// Attempt to handle movement locally, bypassing LLM for speed and reliability
 
 // TODO - at some point, refactor the encounter-specific logic into encounterUtil or a different module that is uncoupled to input, display, and LLM.
 
@@ -53,9 +60,14 @@ function _addCharacterLine(line: string) {
   _addChatBufferLine(line);
 }
 
-function _addNarrationLine(line: string) {
+function _addNarrationLine(text: string) {
   assertNonNullable(theChatBuffer);
-  _addChatBufferLine(`${NARRATION_PREFIX}${line}`);
+  _addChatBufferLine(`${NARRATION_PREFIX}${text}`);
+}
+
+function _addAsciiArtLine(text: string) {
+  assertNonNullable(theChatBuffer);
+  _addChatBufferLine(`${ASCII_ART_PREFIX}${text}`);
 }
 
 function _addGeneratingLine() {
@@ -93,7 +105,11 @@ function _handleActions(actions: Action[]): { systemMessage: string, reprocess: 
 
       case ActionType.CHARACTER_MESSAGE:
         if (_actionCriteriaMet(action.criteria)) {
-          const message = action.messages.nextMessage();
+          let message = action.messages.nextMessage();
+          if (theEncounter.characters && theEncounter.characters.length > 0) {
+            const charName = _toTitleCase(theEncounter.characters[0]);
+            message = `${charName}: ${message}`;
+          }
           _addCharacterLine(message);
           addAssistantMessage(message);
         }
@@ -196,10 +212,15 @@ function _encounterToSystemMessage(encounter: Encounter): string { // TODO facto
     }
   }
 
+  if (encounter.characters && encounter.characters.length > 0) {
+    const charName = _toTitleCase(encounter.characters[0]);
+    systemMessage += `\nStart your response with '${charName}: '.`;
+  }
+
   return systemMessage;
 }
 
-function _initForEncounter(encounter: Encounter, locationName: string) {
+async function _initForEncounter(encounter: Encounter, locationName: string) {
   assertNonNullable(theChatBuffer);
   theChatBuffer.clear();
   theEncounter = encounter;
@@ -209,6 +230,10 @@ function _initForEncounter(encounter: Encounter, locationName: string) {
 
   // ALWAYS clear history first to ensure no leaks from previous scene
   clearChatHistory();
+
+  // Generate and display scene art from description
+  const description = _getSceneDescription(encounter);
+  await _displaySceneArt(locationName, description);
 
   const savedState = WorldManager.loadSceneState(locationName);
   if (savedState) {
@@ -252,6 +277,23 @@ function _initForEncounter(encounter: Encounter, locationName: string) {
   });
 }
 
+function _getSceneDescription(encounter: Encounter): string {
+  const parts: string[] = [encounter.title];
+  for (const action of encounter.startActions) {
+    if (action.actionType === ActionType.NARRATION_MESSAGE) {
+      parts.push(action.messages.nextMessage());
+    }
+  }
+  return parts.join(' ');
+}
+
+async function _displaySceneArt(locationKey: string, description: string) {
+  const artLines = await generateSceneArt(locationKey, description);
+  for (const line of artLines) {
+    _addAsciiArtLine(line);
+  }
+}
+
 function _updateSystemMessageForEncounter() {
   assertNonNullable(theEncounter);
   assertNonNullable(theSessionVariables);
@@ -259,10 +301,10 @@ function _updateSystemMessageForEncounter() {
   setSystemMessage(systemMessage);
 }
 
-export function initChat(encounter: Encounter, setLines: Function) {
+export async function initChat(encounter: Encounter, setLines: Function) {
   theChatBuffer = new TextConsoleBuffer(MAX_LINE_COUNT);
   const startLocation = WorldManager.getStartSceneLocation(); // Using start location for init
-  _initForEncounter(encounter, startLocation);
+  await _initForEncounter(encounter, startLocation);
   setLines(theChatBuffer.lines);
 }
 
@@ -278,17 +320,17 @@ export function recordInput(prompt: string) {
   theInputHistory.push(prompt);
 }
 
-export function updateEncounter(encounter: Encounter, setEncounter: Function, setModalDialogName: Function, setLines: Function, locationName: string) {
+export async function updateEncounter(encounter: Encounter, setEncounter: Function, setModalDialogName: Function, setLines: Function, locationName: string) {
   assertNonNullable(theChatBuffer);
   setModalDialogName(null);
   setEncounter(encounter);
-  _initForEncounter(encounter, locationName);
+  await _initForEncounter(encounter, locationName);
   setLines(theChatBuffer.lines);
 }
 
-export function restartEncounter(encounter: Encounter, setLines: Function) {
+export async function restartEncounter(encounter: Encounter, setLines: Function) {
   assertNonNullable(theChatBuffer);
-  _initForEncounter(encounter, currentLocation);
+  await _initForEncounter(encounter, currentLocation);
   setLines(theChatBuffer.lines);
 }
 
@@ -540,12 +582,25 @@ function _handleLocalDrop(prompt: string): boolean {
   return true;
 }
 
+const _toTitleCase = (str: string) => {
+  return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
 function _checkItemReference(prompt: string): string | null {
+  // If there are characters in the scene, we relax the strict item check
+  // to allow for conversation about absent items.
+  if (theEncounter?.characters && theEncounter.characters.length > 0) {
+    return null;
+  }
+
   const cleanPrompt = prompt.trim().toLowerCase();
 
   // Also register current scene items into the global set
   for (const item of (theEncounter?.sceneItems ?? [])) {
     allKnownItemNames.add(item.toLowerCase());
+  }
+  for (const char of (theEncounter?.characters ?? [])) {
+    allKnownItemNames.add(char.toLowerCase());
   }
 
   // Check ALL known items globally — not just the current scene
@@ -553,7 +608,9 @@ function _checkItemReference(prompt: string): string | null {
     if (cleanPrompt.includes(itemLower)) {
       const inInventory = theInventory.some(i => i.toLowerCase() === itemLower);
       const onGround = theSessionVariables && theSessionVariables.get(`__item_available_${itemLower}`) === true;
-      if (!inInventory && !onGround) {
+      const isCharacter = (theEncounter?.characters ?? []).some(c => c.toLowerCase() === itemLower);
+
+      if (!inInventory && !onGround && !isCharacter) {
         return itemLower;
       }
     }

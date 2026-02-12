@@ -13,7 +13,7 @@ export async function init(setEncounter: Function, setLines: Function, setModalD
   await WorldManager.loadItems('encounters/world/genesis/items.json');
   const startLocation = WorldManager.getStartSceneLocation();
   const encounter = await loadEncounter(WorldManager.getEncounterPath(startLocation));
-  initChat(encounter, setLines);
+  await initChat(encounter, setLines);
   setEncounter(encounter);
   if (encounter.model !== getConnectionModelId()) setModalDialogName(WrongModelDialog.name);
   if (encounter.model !== getConnectionModelId()) setModalDialogName(WrongModelDialog.name);

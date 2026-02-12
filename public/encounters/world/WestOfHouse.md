@@ -11,6 +11,7 @@ _There is a small mailbox here._
 
 > Hi... I'm a mailbox!|I love mail
 
+@mailbox
 - leaflet
 
 # Instructions
