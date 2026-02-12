@@ -23,6 +23,7 @@ let theEncounter: Encounter | null = null;
 let theSessionVariables: VariableManager | null = null;
 let currentLocation: string = '';
 let pruneCountForPendingTransition = 0;
+let theInventory: string[] = [];
 
 function _isLastLineGenerating(): boolean {
   assertNonNullable(theChatBuffer);
@@ -305,6 +306,36 @@ function _handleLocalMovement(prompt: string): 'success' | 'blocked' | null {
   }
 }
 
+function _handleLocalInventory(prompt: string): boolean {
+  const cleanPrompt = prompt.trim().toLowerCase();
+  if (cleanPrompt !== 'i' && cleanPrompt !== 'inventory') return false;
+
+  assertNonNullable(theChatBuffer);
+  _addPlayerLine(prompt);
+
+  if (theInventory.length === 0) {
+    _addNarrationLine('You are empty-handed.');
+  } else {
+    _addNarrationLine('You are carrying:');
+    for (const item of theInventory) {
+      _addNarrationLine(`  - ${item}`);
+    }
+  }
+  return true;
+}
+
+function _checkForInventoryAdd() {
+  if (!theSessionVariables) return;
+  const item = theSessionVariables.get('__inventory_add');
+  if (item && typeof item === 'string') {
+    if (!theInventory.includes(item)) {
+      theInventory.push(item);
+      console.log('[DEBUG] Inventory add:', item, 'Inventory:', theInventory);
+    }
+    theSessionVariables.set('__inventory_add', null);
+  }
+}
+
 export async function submitPrompt(prompt: string, setLines: Function, onSceneChange?: (location: string) => void, setWaiting?: (waiting: boolean) => void) {
   if (!isLlmConnected()) {
     const message = isServingLocally()
@@ -355,13 +386,16 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
 
   pruneCountForPendingTransition = 0; // Reset for normal turn
 
+  // Attempt to handle inventory command locally
+  if (_handleLocalInventory(prompt)) {
+    setLines(theChatBuffer.lines);
+    return;
+  }
+
   // Attempt to handle movement locally, bypassing LLM for speed and reliability
   const localMoveResult = _handleLocalMovement(prompt);
   if (localMoveResult) {
     if (localMoveResult === 'success') {
-      // Transition will be handled by the effect hook (via onSceneChange check at end or next render)
-      // But wait, we need to trigger the "Press Enter" state.
-
       if (theSessionVariables && theSessionVariables.get('location') && onSceneChange) {
         _addNarrationLine('(Press Enter to continue)');
         pruneCountForPendingTransition = 3;
@@ -385,6 +419,7 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
     try {
       const fullResponseText = await generate(prompt, (responseText: string) => _onUpdateResponse(responseText, setLines));
       const reprocess = _finalizeResponse(fullResponseText);
+      _checkForInventoryAdd();
       setLines(theChatBuffer.lines);
 
       if (theSessionVariables) {

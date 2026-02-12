@@ -29,6 +29,7 @@ _Opening the small mailbox reveals a leaflet._
 ## `hasMail` user wants to read leaflet
 
 > "WELCOME TO ZORK!"
+`__inventory_add='leaflet'`
 
 ## `hasMail`user wants to open mailbox
 

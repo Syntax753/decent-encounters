@@ -19,5 +19,7 @@ _A small stream flows through the field._
 **Your favorite color is blue**
 **All of your responses should be less than 20 words long.**
 
+## user shows the leaflet to the nymph
 
+_The nymph reads the leaflet and smiles._
 
