@@ -9,7 +9,8 @@ export async function init(setEncounter: Function, setLines: Function, setModalD
 
   // It's going to double-load in dev environment, and that's harmless. If you decide to add a flag check, you also
   // need to do something like have 3 potential return states, e.g., failed-try-again-after-llm-load, failed-dont-try-again, success.
-  await WorldManager.loadWorld('encounters/world/world.json');
+  await WorldManager.loadWorld('encounters/world/genesis/world.json');
+  await WorldManager.loadItems('encounters/world/genesis/items.json');
   const startLocation = WorldManager.getStartSceneLocation();
   const encounter = await loadEncounter(WorldManager.getEncounterPath(startLocation));
   initChat(encounter, setLines);

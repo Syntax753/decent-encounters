@@ -1,0 +1,138 @@
+{
+    "items": {
+        "leaflet": {
+            "look": "A small leaflet with writing on it.",
+            "read": "\"WELCOME TO ZORK!\n\nZORK is a game of adventure, danger, and low cunning. In it you will explore some of the most amazing territory ever seen by mortals. No computer should be without one!\""
+        },
+        "mailbox": {
+            "look": "A small mailbox with the flag down.",
+            "open": "Opening the small mailbox reveals a leaflet."
+        },
+        "sack": {
+            "look": "An elongated brown sack, smelling of hot peppers.",
+            "open": "Opening the brown sack reveals a lunch, and a clove of garlic."
+        },
+        "lunch": {
+            "look": "A hot pepper sandwich, a ## of water, and a clove of garlic."
+        },
+        "garlic": {
+            "look": "A clove of garlic. It has a strong smell."
+        },
+        "bottle": {
+            "look": "A clear glass bottle. The glass bottle contains a quantity of water.",
+            "open": "Opened."
+        },
+        "sword": {
+            "look": "A gleaming elvish sword of great antiquity. On the blade is an inscription: \"Orcrist\"."
+        },
+        "lamp": {
+            "look": "A brass lantern. The lamp is currently off."
+        },
+        "rope": {
+            "look": "A length of sturdy rope, approximately 30 feet long."
+        },
+        "knife": {
+            "look": "A nasty-looking knife."
+        },
+        "egg": {
+            "look": "A beautiful jewel-encrusted egg, with a clasp on the side.",
+            "open": "The egg opens easily, revealing a golden clockwork canary. The canary begins to sing."
+        },
+        "canary": {
+            "look": "A beautiful golden clockwork canary, singing a delicate melody."
+        },
+        "painting": {
+            "look": "A beautiful painting of a pastoral scene, depicting a family at a continental breakfast."
+        },
+        "axe": {
+            "look": "A large and rather worn axe."
+        },
+        "torch": {
+            "look": "A large flaming ivory torch, burning brightly."
+        },
+        "bell": {
+            "look": "A small brass bell."
+        },
+        "coffin": {
+            "look": "A solid-gold coffin used for the burial of Ramses II.",
+            "open": "The gold coffin opens to reveal a beautiful sceptre within."
+        },
+        "sceptre": {
+            "look": "A beautiful sceptre, presumably that of ancient Egypt."
+        },
+        "candles": {
+            "look": "A pair of candles burning on the ends of an altar."
+        },
+        "book": {
+            "look": "A large black book, open to page 569.",
+            "read": "Each word of the prayer reverberates through the temple: \"O ye combatants of evil, bring the darkness to light...\""
+        },
+        "skull": {
+            "look": "A beautifully carved crystal skull. It appears to be grinning at you rather nastily."
+        },
+        "matches": {
+            "look": "A matchbook whose cover says \"Visit Beautiful FCD#3\". There are a few matches left."
+        },
+        "guidebooks": {
+            "look": "Guidebooks entitled \"Flood Control Dam #3\" published by Frobozz Magic Company.",
+            "read": "\"Flood Control Dam #3 (FCD#3) was constructed in year 783 of the Great Underground Empire to harness the power of the Frigid River...\""
+        },
+        "wrench": {
+            "look": "A large adjustable wrench."
+        },
+        "screwdriver": {
+            "look": "A flat-head screwdriver."
+        },
+        "tube": {
+            "look": "An object which looks like a tube of toothpaste.",
+            "open": "The viscous material oozes out and covers everything."
+        },
+        "plastic": {
+            "look": "A folded pile of plastic with a small valve attached. It appears to be some kind of boat or raft."
+        },
+        "platinumBar": {
+            "look": "A large bar of pure platinum, incredibly heavy."
+        },
+        "trunk": {
+            "look": "An old trunk, bulging with assorted jewels.",
+            "open": "You open the trunk, revealing a fortune in jewels."
+        },
+        "pump": {
+            "look": "A hand-held air pump."
+        },
+        "trident": {
+            "look": "Poseidon's own crystal trident, highly ornamented and finely wrought."
+        },
+        "jade": {
+            "look": "An exquisite jade figurine of a dragon, about six inches high."
+        },
+        "bracelet": {
+            "look": "A sapphire-encrusted bracelet of great value."
+        },
+        "coal": {
+            "look": "A small pile of coal."
+        },
+        "shovel": {
+            "look": "A sturdy shovel with a wooden handle."
+        },
+        "scarab": {
+            "look": "A beautiful jeweled scarab. It is ornamented with emeralds and sapphires."
+        },
+        "coins": {
+            "look": "An old leather bag, bulging with coins."
+        },
+        "key": {
+            "look": "A skeleton key, rusty but still functional."
+        },
+        "chalice": {
+            "look": "A beautiful silver chalice, intricately engraved."
+        },
+        "buoy": {
+            "look": "A red buoy with a dark green label reading \"Frobozz Magic Buoy Company\".",
+            "open": "Opening the buoy reveals a large emerald."
+        },
+        "emerald": {
+            "look": "A large, beautiful emerald."
+        }
+    }
+}

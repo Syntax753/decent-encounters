@@ -458,6 +458,52 @@ function _camelToTitle(str: string): string {
   return str.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
 }
 
+// Verb patterns: maps verbs like 'look at', 'examine', 'open', 'read' to canonical verb keys in items.json
+const VERB_PATTERNS: { patterns: string[], verb: string }[] = [
+  { patterns: ['look at ', 'examine ', 'inspect ', 'look ', 'x '], verb: 'look' },
+  { patterns: ['open '], verb: 'open' },
+  { patterns: ['read '], verb: 'read' },
+];
+
+function _handleItemVerb(prompt: string): boolean {
+  const clean = prompt.trim().toLowerCase();
+
+  for (const { patterns, verb } of VERB_PATTERNS) {
+    for (const pattern of patterns) {
+      if (!clean.startsWith(pattern)) continue;
+      const rest = clean.substring(pattern.length).trim();
+      if (rest.length === 0) continue;
+
+      // Try to match against all known items in items.json
+      const allItems = WorldManager.getAllItemNames();
+      const matchedItem = allItems.find(name => rest === name || rest === `the ${name}`);
+      if (!matchedItem) continue;
+
+      assertNonNullable(theChatBuffer);
+      _addPlayerLine(prompt);
+
+      // Check if item is accessible: in inventory or available in scene
+      const inInventory = theInventory.some(i => i.toLowerCase() === matchedItem);
+      const onGround = theSessionVariables && theSessionVariables.get(`__item_available_${matchedItem}`) === true;
+
+      if (!inInventory && !onGround) {
+        _addNarrationLine(`You don't see any ${matchedItem} here.`);
+        return true;
+      }
+
+      // Look up verb response
+      const itemDef = WorldManager.getItemVerbs(matchedItem);
+      if (itemDef && itemDef[verb]) {
+        _addNarrationLine(itemDef[verb]);
+      } else {
+        _addNarrationLine(`You can't ${verb} the ${matchedItem}.`);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 const DROP_PATTERNS = ['drop ', 'put down '];
 
 function _handleLocalDrop(prompt: string): boolean {
@@ -580,6 +626,12 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
 
   // Attempt to handle drop command locally
   if (_handleLocalDrop(prompt)) {
+    setLines(theChatBuffer.lines);
+    return;
+  }
+
+  // Attempt to handle item verb command (look at X, open X, read X)
+  if (_handleItemVerb(prompt)) {
     setLines(theChatBuffer.lines);
     return;
   }
