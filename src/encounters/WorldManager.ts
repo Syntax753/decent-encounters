@@ -104,6 +104,10 @@ class WorldManager {
     loadSceneState(location: string): SceneState | null {
         return this._sceneStates[location] || null;
     }
+
+    clearAllSceneStates() {
+        this._sceneStates = {};
+    }
 }
 
 export default new WorldManager();

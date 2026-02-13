@@ -1,4 +1,4 @@
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import { ModelDeviceProblemsDialog, ModelDeviceProblem } from "decent-portal";
 
 import styles from './LoadScreen.module.css';
@@ -12,16 +12,21 @@ type Props = {
   onComplete: () => void;
 }
 
-function LoadScreen(props:Props) {
+function LoadScreen(props: Props) {
   const [percentComplete, setPercentComplete] = useState(0);
   const [isReadyToLoad, setIsReadyToLoad] = useState<boolean>(false);
   const [wasLoadCancelled, setWasLoadCancelled] = useState<boolean>(false);
-  const [modalDialogName, setModalDialogName] = useState<string|null>(null);
+  const [modalDialogName, setModalDialogName] = useState<string | null>(null);
   const [modelId, setModelId] = useState<string>('');
   const [currentTask, setCurrentTask] = useState('Loading');
-  const [problems, setProblems] = useState<ModelDeviceProblem[]|null>(null);
-  const {onComplete} = props;
-  
+  const [problems, setProblems] = useState<ModelDeviceProblem[] | null>(null);
+  const [splashArt, setSplashArt] = useState<string>('');
+  const { onComplete } = props;
+
+  useEffect(() => {
+    fetch(`/splash.txt?t=${Date.now()}`).then(r => r.text()).then(setSplashArt);
+  }, []);
+
   useEffect(() => {
     if (!isReadyToLoad) {
       init(setModelId, setProblems, setModalDialogName).then(setIsReadyToLoad);
@@ -32,30 +37,33 @@ function LoadScreen(props:Props) {
   }, [isReadyToLoad, modelId]);
 
   const statusContent = wasLoadCancelled ? (
-      <div className={styles.cancelledMessage}>
-        <p>Model loading was cancelled.</p>
-        <p><ContentButton text='Try Again' onClick={() => window.location.reload()} /></p> 
-      </div> 
-    ) : (
-      <div className={styles.progressBarContainer}>
-            <ProgressBar percentComplete={percentComplete}/>
-            {currentTask}
-      </div>
-    );
-  
+    <div className={styles.cancelledMessage}>
+      <p>Model loading was cancelled.</p>
+      <p><ContentButton text='Try Again' onClick={() => window.location.reload()} /></p>
+    </div>
+  ) : (
+    <div className={styles.progressBarContainer}>
+      <ProgressBar percentComplete={percentComplete} />
+      {currentTask}
+    </div>
+  );
+
   return (
     <div className={styles.container}>
-      <TopBar onAboutClick={() => setModalDialogName(AboutDialog.name)}/>
+      <TopBar onAboutClick={() => setModalDialogName(AboutDialog.name)} />
       <div className={styles.content}>
+        <div className={styles.splashArt}>
+          <pre>{splashArt}</pre>
+        </div>
         {statusContent}
       </div>
 
-      <ModelDeviceProblemsDialog 
-        isOpen={modalDialogName === ModelDeviceProblemsDialog.name} 
+      <ModelDeviceProblemsDialog
+        isOpen={modalDialogName === ModelDeviceProblemsDialog.name}
         modelId={modelId}
-        problems={problems} 
-        onConfirm={() => {setModalDialogName(null); setIsReadyToLoad(true); }} 
-        onCancel={() => {setModalDialogName(null); setWasLoadCancelled(true); }}
+        problems={problems}
+        onConfirm={() => { setModalDialogName(null); setIsReadyToLoad(true); }}
+        onCancel={() => { setModalDialogName(null); setWasLoadCancelled(true); }}
       />
       <AboutDialog
         isOpen={modalDialogName === AboutDialog.name}

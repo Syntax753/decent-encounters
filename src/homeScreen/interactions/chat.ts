@@ -62,12 +62,36 @@ function _addCharacterLine(line: string) {
 
 function _addNarrationLine(text: string) {
   assertNonNullable(theChatBuffer);
-  _addChatBufferLine(`${NARRATION_PREFIX}${text}`);
+  _addChatBufferLine(`${NARRATION_PREFIX}${text.replace(/@/g, '')}`);
 }
 
 function _addAsciiArtLine(text: string) {
   assertNonNullable(theChatBuffer);
   _addChatBufferLine(`${ASCII_ART_PREFIX}${text}`);
+}
+
+function _filterConsoleLinesForSave(lines: any[]): any[] {
+  // Only keep player input and character conversation lines.
+  // Exclude narration (movement messages, direction listings, item descriptions)
+  // and ASCII art (scene art), which are local trigger output.
+  return lines.filter(line => {
+    const text = line.text || '';
+    if (text.startsWith(NARRATION_PREFIX)) return false;
+    if (text.startsWith(ASCII_ART_PREFIX)) return false;
+    return true;
+  });
+}
+
+function _filterVariablesForSave(variables: any): any {
+  // Only persist item availability state.
+  // Exclude transient trigger variables like location, direction intents, etc.
+  const filtered: any = {};
+  for (const key of Object.keys(variables)) {
+    if (key.startsWith('__item_available_')) {
+      filtered[key] = variables[key];
+    }
+  }
+  return filtered;
 }
 
 function _addGeneratingLine() {
@@ -231,6 +255,9 @@ async function _initForEncounter(encounter: Encounter, locationName: string) {
   // ALWAYS clear history first to ensure no leaks from previous scene
   clearChatHistory();
 
+  // Display exit directions as the FIRST line, above art
+  _displayExitDirections();
+
   // Generate and display scene art from description
   const description = _getSceneDescription(encounter);
   await _displaySceneArt(locationName, description);
@@ -247,17 +274,21 @@ async function _initForEncounter(encounter: Encounter, locationName: string) {
     // Restore history (this overwrites the empty array from clearChatHistory)
     setChatHistory(savedState.chatHistory);
 
-    if (savedState.consoleLines) {
-      theChatBuffer.setLines(savedState.consoleLines);
-    }
-
     const systemMessage = _encounterToSystemMessage(encounter);
     setSystemMessage(systemMessage);
 
-    const returnMessage = `[System]: You have returned to ${encounter.title}. The previous conversation here is restored. Respond as if you are in this location.`;
-    _addNarrationLine(`(You return to: ${encounter.title})`);
+    // Always display the scene description at the top
+    _addNarrationLine(description);
+
+    // Then restore saved conversation lines below the description
+    if (savedState.consoleLines) {
+      for (const line of savedState.consoleLines) {
+        theChatBuffer.addLine(line.text);
+      }
+    }
+
     _displayAvailableItems();
-    _displayExitDirections();
+    const returnMessage = `[System]: You have returned to ${encounter.title}. The previous conversation here is restored. Respond as if you are in this location.`;
     addAssistantMessage(returnMessage);
   } else {
     console.log('Initializing fresh state for', locationName);
@@ -268,7 +299,6 @@ async function _initForEncounter(encounter: Encounter, locationName: string) {
     // history is already cleared above
     _handleActions(encounter.startActions);
     _displayAvailableItems();
-    _displayExitDirections();
   }
   console.log(`[DEBUG] Scene State for '${locationName}':`, {
     location: locationName,
@@ -284,7 +314,7 @@ function _getSceneDescription(encounter: Encounter): string {
       parts.push(action.messages.nextMessage());
     }
   }
-  return parts.join(' ');
+  return parts.join(' ').replace(/@/g, '');
 }
 
 async function _displaySceneArt(locationKey: string, description: string) {
@@ -601,6 +631,34 @@ function _handleLocalLook(prompt: string): boolean {
   return true;
 }
 
+const RESTART_PATTERNS = ['restart', 'restart game'];
+
+function _handleLocalRestart(prompt: string, onSceneChange?: (location: string) => void): boolean {
+  const cleanPrompt = prompt.trim().toLowerCase();
+  if (!RESTART_PATTERNS.includes(cleanPrompt)) return false;
+  if (!onSceneChange) return false;
+
+  assertNonNullable(theChatBuffer);
+
+  // Wipe all saved scene states
+  WorldManager.clearAllSceneStates();
+
+  // Clear player inventory
+  playerInventory.length = 0;
+
+  // Clear current session
+  theSessionVariables = null;
+  theEncounter = null;
+  clearChatHistory();
+  theChatBuffer.clear();
+
+  // Navigate to start location
+  const startLocation = WorldManager.getStartSceneLocation();
+  onSceneChange(startLocation);
+
+  return true;
+}
+
 const _toTitleCase = (str: string) => {
   return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
@@ -670,9 +728,9 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
 
       const state = {
         chatHistory: getChatHistory(),
-        variables: theSessionVariables.toCollection(),
+        variables: _filterVariablesForSave(theSessionVariables.toCollection()),
         location: currentLocation,
-        consoleLines: linesToSave,
+        consoleLines: _filterConsoleLinesForSave(linesToSave),
         inputHistory: theInputHistory
       };
       console.log(`[DEBUG] Leaving '${currentLocation}', saving state (pruned ${pruneCountForPendingTransition} lines):`, state);
@@ -715,6 +773,11 @@ export async function submitPrompt(prompt: string, setLines: Function, onSceneCh
   // Attempt to handle global look command
   if (_handleLocalLook(prompt)) {
     setLines(theChatBuffer.lines);
+    return;
+  }
+
+  // Attempt to handle restart command
+  if (_handleLocalRestart(prompt, onSceneChange)) {
     return;
   }
 

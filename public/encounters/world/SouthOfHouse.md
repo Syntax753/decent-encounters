@@ -7,9 +7,9 @@
 # Start
 
 _You are facing the south side of a white house. There is no door here, and all the windows are boarded._
-_The Queen of Hearts is sitting on the window ledge, looking very sad._
+_The @Queen_of_Hearts is sitting on the window ledge, looking very sad._
 
-> Oh... hello there. I'm the @Queen_of_Hearts. I'm feeling a bit down today.|I'm feeling a bit down today.
+> Oh... hello there. I'm the Queen of Hearts. I'm feeling a bit down today.|I'm feeling a bit down today.
 
 # Instructions
 

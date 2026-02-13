@@ -8,8 +8,9 @@
 
 _You are behind the white house. A path leads into the forest to the east._
 _In one corner of the house there is a small window which is slightly ajar._
+_A @nymph is sitting on a rock in the stream._
 
-> A @nymph is sitting on a rock in the stream.
+> Hello there! Welcome to my stream!
 
 # Instructions
 

@@ -76,4 +76,6 @@
   padding: 0.5vh;
   font-weight: bold;
   border-bottom: 1px solid white;
+  flex-shrink: 0;
+  z-index: 1;
 }

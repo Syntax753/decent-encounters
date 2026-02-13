@@ -5,11 +5,11 @@
     row-gap: 0;
     grid-template-rows: 10vh calc(80vh - 1rem) 10vh 1rem;
     grid-template-columns: 1fr 8fr 1fr;
-    grid-template-areas: 
-            "header header header"
-            ". content ." 
-            "footer footer footer"
-            "avoid-overflow avoid-overflow avoid-overflow";
+    grid-template-areas:
+        "header header header"
+        ". content ."
+        "footer footer footer"
+        "avoid-overflow avoid-overflow avoid-overflow";
 }
 
 @media only screen and (max-width: 600px) {
@@ -36,6 +36,7 @@
     text-align: center;
     font-size: 4vh;
 }
+
 @media only screen and (max-width: 600px) {
     .header h1 {
         font-size: 3vh;
@@ -44,8 +45,10 @@
 
 .content {
     grid-area: content;
-    padding: 3vh;
-    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1vh;
     text-align: center;
 }
 
@@ -67,9 +70,38 @@
     margin-top: 2vh;
 }
 
-.progressBarContainer {
-    height: 4vh;
+.splashArt {
+    height: calc(100% - 6vh);
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    border: 2px solid #333;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.splashArt pre {
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    color: #33ff33;
+    font-size: min(1.4vw, 1.6vh);
+    line-height: 1.15;
+    letter-spacing: normal;
+    white-space: pre;
+    margin: 0;
+    padding: 1vh 1vw;
+    text-align: left;
+}
+
+.progressBarContainer {
+    height: 6vh;
+    width: 100%;
+    padding-top: 1vh;
+}
+
+.cancelledMessage {
+    text-align: center;
 }
 
 .footer {

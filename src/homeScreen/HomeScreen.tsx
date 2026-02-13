@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import styles from './HomeScreen.module.css';
+import directionsStyles from '@/components/chat/ChatHistory.module.css';
 import { init } from "./interactions/initialization";
 import LoadScreen from '@/loadScreen/LoadScreen';
 import TopBar from '@/components/topBar/TopBar';
@@ -42,13 +43,21 @@ function HomeScreen() {
     <div className={styles.container}>
       <TopBar onAboutClick={() => setModalDialogName(AboutDialog.name)} />
       <div className={styles.content}>
+        {(() => {
+          const dirs = WorldManager.getDirections(location);
+          if (dirs.length === 0) return null;
+          let text = '';
+          if (dirs.length === 1) text = `You can exit to the ${dirs[0]}`;
+          else if (dirs.length === 2) text = `You can exit to the ${dirs[0]} or ${dirs[1]}`;
+          else { const allButLast = dirs.slice(0, -1).join(', '); text = `You can exit to the ${allButLast} or ${dirs[dirs.length - 1]}`; }
+          return <div className={directionsStyles.directionsBar}>{text}</div>;
+        })()}
         <h1>{encounter.title}</h1>
         <Chat
           key={encounter.title}
           className={styles.chat}
           lines={lines}
           isWaiting={isWaitingForTransition}
-          validDirections={WorldManager.getDirections(location)}
           onChatInput={(prompt) => submitPrompt(prompt, setLines, async (nextLocation: string) => {
             const nextEncounter = await loadEncounter(WorldManager.getEncounterPath(nextLocation));
             setLocation(nextLocation);

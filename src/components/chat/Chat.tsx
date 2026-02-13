@@ -11,11 +11,10 @@ type Props = {
   onChatInput: (text: string) => void,
   disabled?: boolean,
   isWaiting?: boolean,
-  validDirections?: string[]
 }
 
 function Chat(props: Props) {
-  const { className, lines, onChatInput, disabled, isWaiting, validDirections } = props;
+  const { className, lines, onChatInput, disabled, isWaiting } = props;
 
   useEffect(() => {
     if (!isWaiting) return;
@@ -33,7 +32,7 @@ function Chat(props: Props) {
 
   return (
     <div className={className}>
-      <ChatHistory lines={lines} validDirections={validDirections} />
+      <ChatHistory lines={lines} />
       {!isWaiting && <ChatInputBox onSubmit={onChatInput} disabled={disabled} />}
     </div>
   );

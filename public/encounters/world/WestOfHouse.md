@@ -7,9 +7,9 @@
 
 # Start
 _You are standing in an open field west of a white house, with a boarded front door._
-_There is a small mailbox here._
+_There is a small @mailbox here._
 
-> Hi... I'm a @mailbox!|I love mail
+> Hi... I'm a mailbox!|I love mail
 - leaflet
 
 # Instructions
@@ -30,7 +30,7 @@ _Opening the small mailbox reveals a leaflet._
 
 ## `hasMail` user wants to read leaflet
 
-> "WELCOME TO ZORK!"
+> "WELCOME TO ZorC! ZorC is a game of adventure, danger, and low cunning. In it you will explore some of the most amazing territory ever seen by mortals. No computer should be without one!"
 
 ## `hasMail`user wants to open mailbox
 
