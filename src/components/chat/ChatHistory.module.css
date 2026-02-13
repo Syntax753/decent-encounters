@@ -54,14 +54,14 @@
 }
 
 .narrativeLine {
-  text-align: center;
+  text-align: left;
 }
 
 .asciiArtLine {
   font-family: Consolas, 'Courier New', Courier, monospace;
   font-size: 0.9em;
   line-height: 1.0;
-  text-align: center;
+  text-align: left;
   white-space: pre;
   margin: 0;
   padding: 0;
