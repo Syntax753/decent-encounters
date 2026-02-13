@@ -2,9 +2,17 @@
   height: 100%;
   background-color: lightgray;
   overflow: hidden;
-  cursor: pointer;
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
 
+.console {
+  flex-grow: 1;
+  height: auto;
+  /* Override TextConsole 100% height to allow flex-grow to work properly */
+  overflow: hidden;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 0.6vh;
@@ -46,17 +54,26 @@
 }
 
 .narrativeLine {
-  text-align: left;
+  text-align: center;
 }
 
 .asciiArtLine {
   font-family: Consolas, 'Courier New', Courier, monospace;
   font-size: 0.9em;
   line-height: 1.0;
-  text-align: left;
+  text-align: center;
   white-space: pre;
   margin: 0;
   padding: 0;
   /* letter-spacing must be 0 or normal for ASCII art alignment */
   letter-spacing: normal;
+}
+
+.directionsBar {
+  background-color: black;
+  color: white;
+  text-align: center;
+  padding: 0.5vh;
+  font-weight: bold;
+  border-bottom: 1px solid white;
 }

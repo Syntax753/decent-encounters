@@ -48,6 +48,7 @@ function HomeScreen() {
           className={styles.chat}
           lines={lines}
           isWaiting={isWaitingForTransition}
+          validDirections={WorldManager.getDirections(location)}
           onChatInput={(prompt) => submitPrompt(prompt, setLines, async (nextLocation: string) => {
             const nextEncounter = await loadEncounter(WorldManager.getEncounterPath(nextLocation));
             setLocation(nextLocation);

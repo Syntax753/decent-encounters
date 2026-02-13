@@ -8,7 +8,8 @@ export const NARRATION_PREFIX = 'NARRATION:';
 export const ASCII_ART_PREFIX = 'ASCII_ART:';
 
 type Props = {
-  lines: TextConsoleLine[]
+  lines: TextConsoleLine[],
+  validDirections?: string[]
 }
 
 function _onRenderLine(key: number, text: string) {
@@ -36,10 +37,25 @@ function _onRenderLine(key: number, text: string) {
 }
 
 function ChatHistory(props: Props) {
-  const { lines } = props;
+  const { lines, validDirections } = props;
+
+  const formatDirections = (dirs: string[]) => {
+    if (dirs.length === 0) return '';
+    if (dirs.length === 1) return `You can exit to the ${dirs[0]}`;
+    if (dirs.length === 2) return `You can exit to the ${dirs[0]} or ${dirs[1]}`;
+    const allButLast = dirs.slice(0, -1).join(', ');
+    return `You can exit to the ${allButLast} or ${dirs[dirs.length - 1]}`;
+  };
 
   return (
-    <TextConsole className={styles.container} lines={lines} onRenderLine={_onRenderLine} />
+    <div className={styles.container}>
+      {validDirections && validDirections.length > 0 && (
+        <div className={styles.directionsBar}>
+          {formatDirections(validDirections)}
+        </div>
+      )}
+      <TextConsole className={styles.console} lines={lines} onRenderLine={_onRenderLine} />
+    </div>
   );
 }
 
