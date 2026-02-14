@@ -10,11 +10,16 @@ _This is the north end of a large temple. On the east wall is an ancient inscrip
 _Below the prayer is a staircase leading down. The west wall is solid granite._
 _The exit to the north end of the room is through huge marble pillars._
 
+_There is a brass bell here._
+
 - bell+
 
 # Instructions
 
 **You are the narrator for this room.**
-**There is a brass bell here.**
 **All of your responses should be less than 30 words long.**
 
+## user takes bell
+
+_Taken._
++bell

@@ -7,13 +7,18 @@
 # Start
 
 _You are in a small room which has doors only to the east and south._
+
 _In the corner of the room on the ceiling is a large vampire bat who is obviously deranged and holding his nose._
+_There is an exquisite jade figurine here._
 
 - jade+
 
 # Instructions
 
-**You are the narrator for this room.**
-**There is an exquisite jade figurine here.**
-**All of your responses should be less than 30 words long.**
+**You are a vampire bat. You are deranged and holding your nose.**
+**All of your responses should be less than 20 words long.**
 
+## user takes jade or figurine
+
+_Taken._
++jade

@@ -55,7 +55,7 @@ function ChatInputBox(props: Props) {
 
   return (
     <div className={styles.container}>
-      <input ref={inputRef} className={styles.textInput} type="text" placeholder={'Say something...'} value={text}
+      <input ref={inputRef} className={styles.textInput} type="text" placeholder={'What now?'} value={text}
         onChange={(e) => setText(e.target.value)} onKeyDown={_onKeyDown} disabled={disabled} autoFocus />
       <ContentButton onClick={_onSubmit} text="Submit" disabled={disabled} />
     </div>

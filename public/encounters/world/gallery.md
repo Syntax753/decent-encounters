@@ -8,6 +8,7 @@
 
 _This is an art gallery. Most of the paintings have been stolen by vandals with exceptional taste._
 _The vandals left through either the north or west exits._
+
 _Fortunately, there is still one chance for you to be a vandal, for on the far wall is a painting of unparalleled beauty._
 
 - painting+
@@ -17,3 +18,7 @@ _Fortunately, there is still one chance for you to be a vandal, for on the far w
 **You are the narrator for this room.**
 **All of your responses should be less than 30 words long.**
 
+## user takes painting
+
+_Taken._
++painting

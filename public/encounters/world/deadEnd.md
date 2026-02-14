@@ -7,6 +7,7 @@
 # Start
 
 _You have come to a dead end in the mine._
+_There is a small pile of coal here._
 
 - coal+
 
@@ -16,3 +17,7 @@ _You have come to a dead end in the mine._
 **There is a small pile of coal here.**
 **All of your responses should be less than 30 words long.**
 
+## user takes coal
+
+_Taken._
++coal

@@ -8,6 +8,7 @@
 
 _This is the south end of a large temple. In front of you is what appears to be an altar._
 _In one corner is a small hole in the floor which leads into darkness. You probably could not get back up it._
+
 _On the two ends of the altar are burning candles._
 _On the altar is a large black book, open to page 569._
 
@@ -17,5 +18,10 @@ _On the altar is a large black book, open to page 569._
 # Instructions
 
 **You are the narrator for this room.**
+**There is an altar here.**
 **All of your responses should be less than 30 words long.**
 
+## user prays or kneels
+
+_Forest_
+^teleport:forest

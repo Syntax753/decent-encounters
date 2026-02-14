@@ -24,3 +24,12 @@ _A @nymph is sitting on a rock in the stream._
 
 _The nymph reads the leaflet and smiles._
 
+## `!windowOpen` user wants to open window
+
+_With great effort, you open the window far enough to allow entry. ^enter:kitchen_
+`windowOpen=true`
+
+## `windowOpen` user wants to enter house or go through window
+
+_You climb through the window into the kitchen._
+

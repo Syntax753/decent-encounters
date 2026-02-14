@@ -108,6 +108,33 @@ class WorldManager {
     clearAllSceneStates() {
         this._sceneStates = {};
     }
+
+    addDirection(location: string, direction: string, destination: string) {
+        assert(this._worldDef !== null);
+        const scene = this._worldDef.scenes[location];
+        if (!scene) throw Error(`Scene not found for location: ${location}`);
+        if (!scene.directions) scene.directions = {};
+        scene.directions[direction.toLowerCase()] = destination;
+    }
+
+    private _camelCaseToTitleCase(input: string): string {
+        // Handle special cases or just split by capital letters
+        const result = input.replace(/([A-Z])/g, " $1");
+        return result.charAt(0).toUpperCase() + result.slice(1);
+    }
+
+    getDirectionsText(location: string): string {
+        const dirs = this.getDirectionsWithDestinations(location);
+        if (dirs.length === 0) return '';
+
+        const dirStrings = dirs.map(d => `${d.direction} (${this._camelCaseToTitleCase(d.destination)})`);
+
+        if (dirStrings.length === 1) return `You can exit to the ${dirStrings[0]}`;
+        if (dirStrings.length === 2) return `You can exit to the ${dirStrings[0]} or ${dirStrings[1]}`;
+
+        const allButLast = dirStrings.slice(0, -1).join(', ');
+        return `You can exit to the ${allButLast} or ${dirStrings[dirStrings.length - 1]}`;
+    }
 }
 
 export default new WorldManager();

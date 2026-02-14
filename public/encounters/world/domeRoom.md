@@ -14,3 +14,12 @@ _Protecting you from a precipitous drop is a wooden railing which circles the do
 **You are the narrator for this room.**
 **All of your responses should be less than 30 words long.**
 
+## `!ropeTied` user wants to tie rope to railing
+
+_The rope drops over the side and comes within ten feet of the floor. ^down:torchRoom_
+`ropeTied=true`
+
+## `ropeTied` user wants to go down or climb down
+
+_You climb down the rope._
+

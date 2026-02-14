@@ -9,11 +9,17 @@
 _This is a small room which smells strongly of coal gas._
 _There is a short climb up some stairs and a narrow tunnel leading east._
 
+_There is a sapphire-encrusted bracelet here._
+
 - bracelet+
 
 # Instructions
 
 **You are the narrator for this room.**
-**There is a sapphire-encrusted bracelet here.**
+**It smells of coal gas here.**
 **All of your responses should be less than 30 words long.**
 
+## user takes bracelet
+
+_Taken._
++bracelet

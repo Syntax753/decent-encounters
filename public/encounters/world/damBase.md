@@ -7,13 +7,22 @@
 # Start
 
 _You are at the base of Flood Control Dam #3, which looms above you and to the north._
-_The river Frigid is flowing by here. Along the river are the White Cliffs which seem to form giant walls stretching from north to south along the shores of the river as it winds its way downstream._
-_There is a folded pile of plastic here which has a small valve attached._
+_The river Frigid is flowing towards you from the storm drains which open at the base of the dam._
+
+_There is a pile of plastic here._
 
 - plastic+
+- boat+
+- pump+
 
 # Instructions
 
 **You are the narrator for this room.**
+**There is a pile of plastic here.**
 **All of your responses should be less than 30 words long.**
 
+## user inflates plastic with pump
+
+_The boat inflates and appears seaworthy._
+_A tan label is lying inside the boat._
++boat

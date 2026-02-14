@@ -62,7 +62,22 @@ function _addCharacterLine(line: string) {
 
 function _addNarrationLine(text: string) {
   assertNonNullable(theChatBuffer);
-  _addChatBufferLine(`${NARRATION_PREFIX}${text.replace(/@/g, '')}`);
+  // Detect ^direction:destination annotations and add dynamic directions
+  const directionPattern = /\^(\w+):(\w+)/g;
+  let match;
+  while ((match = directionPattern.exec(text)) !== null) {
+    const [, direction, destination] = match;
+    if (currentLocation) {
+      WorldManager.addDirection(currentLocation, direction, destination);
+      console.log(`[DIRECTION] Added ${direction} → ${destination} at ${currentLocation}`);
+    }
+  }
+  // Strip @ and ^direction:destination annotations from displayed text
+  // Also replace underscores in character names (e.g. @Queen_of_Hearts -> Queen of Hearts)
+  const cleanText = text
+    .replace(/\s*\^(\w+):(\w+)/g, '')
+    .replace(/@(\w+)/g, (match, name) => name.replace(/_/g, ' '));
+  _addChatBufferLine(`${NARRATION_PREFIX}${cleanText}`);
 }
 
 function _addAsciiArtLine(text: string) {
@@ -256,7 +271,7 @@ async function _initForEncounter(encounter: Encounter, locationName: string) {
   clearChatHistory();
 
   // Display exit directions as the FIRST line, above art
-  _displayExitDirections();
+  // _displayExitDirections(); // Removed as requested - moved to TopBar
 
   // Generate and display scene art from description
   const description = _getSceneDescription(encounter);
@@ -644,7 +659,7 @@ function _handleLocalRestart(prompt: string, onSceneChange?: (location: string) 
   WorldManager.clearAllSceneStates();
 
   // Clear player inventory
-  playerInventory.length = 0;
+  theInventory.length = 0;
 
   // Clear current session
   theSessionVariables = null;

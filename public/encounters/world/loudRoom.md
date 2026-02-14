@@ -10,11 +10,26 @@ _This is a large room with a ceiling which cannot be detected from the ground._
 _There is a narrow passage from east to west and a stone stairway leading upward._
 _The room is deafeningly loud with an undetermined rushing sound. The sound seems to reverberate from all of the walls, making it difficult even to think._
 
-- platinumBar+
+_On the ground is a large platinum bar._
+
+- bar+
 
 # Instructions
 
 **You are the narrator for this room.**
-**On the ground is a large platinum bar.**
+**It is unbearably loud here.**
 **All of your responses should be less than 30 words long.**
 
+## `!echoSaid` user says echo
+
+_The acoustics of the room change subtly._
+`echoSaid=true`
+
+## `!echoSaid` user takes bar
+
+_The sheer loudness of the room prevents you from concentrating enough to take the bar._
+
+## `echoSaid` user takes bar
+
+_Taken._
++bar
