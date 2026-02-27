@@ -14,42 +14,42 @@ import { stripTriggerCodes } from "./encounterUtil";
 import { baseUrl } from "@/common/urlUtil";
 import FunctionBinding from "@/spielCode/types/FunctionBinding";
 
-type GenerateCallback = (messages:LLMMessages) => Promise<string>;
-type MessageCallback = (text:string) => void;
+type GenerateCallback = (messages: LLMMessages) => Promise<string>;
+type MessageCallback = (text: string) => void;
 
-function _textToEncounter(text:string):Encounter {
+function _textToEncounter(text: string): Encounter {
   const version = parseVersion(text);
   const majorVersionNo = majorVersion(version); // For now, only v0 is supported.
   if (majorVersionNo !== LATEST_MAJOR_VERSION) throw Error(`Unsupported encounter version: ${version}`);
   return textToEncounter(text);
 }
 
-function _criteriaMet(criteria:Code|null, variables:VariableManager, functionBindings:FunctionBinding[]):boolean {
+function _criteriaMet(criteria: Code | null, variables: VariableManager, functionBindings: FunctionBinding[]): boolean {
   if (!criteria) return true;
   const prevResult = variables.get('__result');
-  assertNonNullable(variables); 
+  assertNonNullable(variables);
   executeCode(criteria, variables, functionBindings);
   const result = variables.get('__result') === true;
   variables.set('__result', prevResult); // Restoring the value avoids any variable name collisions.
   return result;
 }
 
-function _enableConditionalCharacterTriggers(characterTriggers:CharacterTrigger[], variables:VariableManager, functionBindings:FunctionBinding[]) {
-  for(let i = 0; i < characterTriggers.length; ++i) {
+function _enableConditionalCharacterTriggers(characterTriggers: CharacterTrigger[], variables: VariableManager, functionBindings: FunctionBinding[]) {
+  for (let i = 0; i < characterTriggers.length; ++i) {
     const trigger = characterTriggers[i];
     if (trigger.enabledCriteria === null) continue;
     trigger.isEnabled = _criteriaMet(trigger.enabledCriteria, variables, functionBindings);
   }
 }
 
-function _findCharacterTriggerInText(responseText:string, characterTriggers:CharacterTrigger[]):CharacterTrigger|null {
+function _findCharacterTriggerInText(responseText: string, characterTriggers: CharacterTrigger[]): CharacterTrigger | null {
   if (!characterTriggers.length) return null;
   let pos = 0;
-  while(pos < responseText.length) {
-    pos = responseText.indexOf('@', pos);  
+  while (pos < responseText.length) {
+    pos = responseText.indexOf('@', pos);
     if (pos === -1) return null;
-    const triggerCode = responseText[pos+1]; // TODO - support for more than 10 codes. Probably use a-zA-Z0-9 from a lookup array. It is more performant to use less chars.
-    for(let triggerI = 0; triggerI < characterTriggers.length; ++triggerI) {
+    const triggerCode = responseText[pos + 1]; // TODO - support for more than 10 codes. Probably use a-zA-Z0-9 from a lookup array. It is more performant to use less chars.
+    for (let triggerI = 0; triggerI < characterTriggers.length; ++triggerI) {
       const trigger = characterTriggers[triggerI];
       if (!trigger.isEnabled) continue;
       if (triggerCode === trigger.triggerCode) return trigger;
@@ -59,55 +59,55 @@ function _findCharacterTriggerInText(responseText:string, characterTriggers:Char
   return null;
 }
 
-function _isLowerCaseAlphaChar(char:string):boolean {
+function _isLowerCaseAlphaChar(char: string): boolean {
   return char >= 'a' && char <= 'z';
 }
 
-function _doesTextContainPhrase(text:string, phrases:string[]):boolean {
-  const _isAtWordBoundary = (_pos:number) => !_isLowerCaseAlphaChar(text[_pos]);
-  
+function _doesTextContainPhrase(text: string, phrases: string[]): boolean {
+  const _isAtWordBoundary = (_pos: number) => !_isLowerCaseAlphaChar(text[_pos]);
+
   text = text.toLowerCase();
-  for(let phraseI = 0; phraseI < phrases.length; ++phraseI) {
+  for (let phraseI = 0; phraseI < phrases.length; ++phraseI) {
     const phrase = phrases[phraseI].toLowerCase();
     let pos = 0;
     while (pos < text.length) {
       pos = text.indexOf(phrase, pos);
       if (pos === -1) break;
-      if (_isAtWordBoundary(pos-1) && _isAtWordBoundary(pos+phrase.length)) return true;
+      if (_isAtWordBoundary(pos - 1) && _isAtWordBoundary(pos + phrase.length)) return true;
       pos += phrase.length;
     }
   }
   return false;
 }
 
-function _defaultOnGenerate(_messages:LLMMessages):Promise<string> {
+function _defaultOnGenerate(_messages: LLMMessages): Promise<string> {
   console.warn('EncounterSession onGenerate() was not bound. Returning default response.');
   return Promise.resolve('onGenerate() was not bound.');
 }
 
-function _defaultOnCharacterMessage(text:string):void {
+function _defaultOnCharacterMessage(text: string): void {
   console.warn('EncounterSession onCharacterMessage() was not bound. Message:', text);
 }
 
-function _defaultOnNarrationMessage(text:string):void {
+function _defaultOnNarrationMessage(text: string): void {
   console.warn('EncounterSession onNarrationMessage() was not bound. Message:', text);
 }
 
-function _defaultOnPlayerMessage(text:string):void {
+function _defaultOnPlayerMessage(text: string): void {
   console.warn('EncounterSession onPlayerMessage() was not bound. Message:', text);
 }
 
 class EncounterSession {
-  private _encounter:Encounter|null;
-  private _variables:VariableManager;
-  private _onGenerate:GenerateCallback;
-  private _onCharacterMessage:MessageCallback;
-  private _onNarrationMessage:MessageCallback;
-  private _onPlayerMessage:MessageCallback;
-  private _llmMessages:LLMMessages;
-  private _functionBindings:FunctionBinding[] = [];
+  private _encounter: Encounter | null;
+  private _variables: VariableManager;
+  private _onGenerate: GenerateCallback;
+  private _onCharacterMessage: MessageCallback;
+  private _onNarrationMessage: MessageCallback;
+  private _onPlayerMessage: MessageCallback;
+  private _llmMessages: LLMMessages;
+  private _functionBindings: FunctionBinding[] = [];
 
-  constructor(maxChatHistorySize:number = 100) {
+  constructor(maxChatHistorySize: number = 100) {
     this._onGenerate = _defaultOnGenerate;
     this._onCharacterMessage = _defaultOnCharacterMessage;
     this._onNarrationMessage = _defaultOnNarrationMessage;
@@ -115,27 +115,26 @@ class EncounterSession {
     this._encounter = null;
     this._variables = new VariableManager();
     this._llmMessages = {
-      chatHistory:[],
+      chatHistory: [],
       maxChatHistorySize,
       systemMessage: null
     };
     this._functionBindings = [];
   }
 
-  private _handleActions(actions:Action[]):
-      {instructions:string, reprocess:boolean, wereMessagesAdded:boolean} {
+  private _handleActions(actions: Action[]): { instructions: string, reprocess: boolean, wereMessagesAdded: boolean } {
     let reprocess = false;
     let instructions = '';
     let wereMessagesAdded = false;
-    for(let i = 0; i < actions.length; ++i) {
+    for (let i = 0; i < actions.length; ++i) {
       const action = actions[i];
-      switch(action.actionType) {
+      switch (action.actionType) {
         case ActionType.NARRATION_MESSAGE:
           if (_criteriaMet(action.criteria, this._variables, this._functionBindings)) {
             this._onNarrationMessage(action.messages.nextMessage());
             wereMessagesAdded = true;
           }
-        break;
+          break;
 
         case ActionType.CHARACTER_MESSAGE:
           if (_criteriaMet(action.criteria, this._variables, this._functionBindings)) {
@@ -144,7 +143,7 @@ class EncounterSession {
             addAssistantMessageToChatHistory(this._llmMessages, message);
             wereMessagesAdded = true;
           }
-        break;
+          break;
 
         case ActionType.PLAYER_MESSAGE:
           if (_criteriaMet(action.criteria, this._variables, this._functionBindings)) {
@@ -153,22 +152,22 @@ class EncounterSession {
             addUserMessageToChatHistory(this._llmMessages, message);
             wereMessagesAdded = true;
           }
-        break;
-        
+          break;
+
         case ActionType.INSTRUCTION_MESSAGE:
           if (_criteriaMet(action.criteria, this._variables, this._functionBindings)) {
             if (instructions.length) instructions += '\n';
             instructions += action.messages.nextMessage();
           }
-        break;
+          break;
 
         case ActionType.CODE:
           executeCode(action.code, this._variables, this._functionBindings);
-        break;
+          break;
 
         case ActionType.REPROCESS:
           if (_criteriaMet(action.criteria, this._variables, this._functionBindings)) reprocess = true;
-        break;
+          break;
 
         default:
           throw Error('Unexpected');
@@ -177,10 +176,10 @@ class EncounterSession {
     return { instructions, reprocess, wereMessagesAdded };
   }
 
-  private _appendMatchingMemoriesToChatHistory(playerText:string):boolean {
+  private _appendMatchingMemoriesToChatHistory(playerText: string): boolean {
     assertNonNullable(this._encounter);
     let messagesAdded = false;
-    for(let i = 0; i < this._encounter.memories.length; ++i) {
+    for (let i = 0; i < this._encounter.memories.length; ++i) {
       const memory = this._encounter.memories[i];
       if (!_doesTextContainPhrase(playerText, memory.matchPhrases) || !_criteriaMet(memory.enabledCriteria, this._variables, this._functionBindings)) continue;
       const { instructions, wereMessagesAdded } = this._handleActions(memory.actions);
@@ -196,8 +195,8 @@ class EncounterSession {
   private _updateSystemMessage() { // Important: not idempotent. Variable state can change in _handleActions().
     assertNonNullable(this._encounter);
     _enableConditionalCharacterTriggers(this._encounter.characterTriggers, this._variables, this._functionBindings);
-    let {instructions} = this._handleActions(this._encounter.instructionActions); 
-    for(let i = 0; i < this._encounter.characterTriggers.length; ++i) {
+    let { instructions } = this._handleActions(this._encounter.instructionActions);
+    for (let i = 0; i < this._encounter.characterTriggers.length; ++i) {
       const { criteria, triggerCode, isEnabled } = this._encounter.characterTriggers[i];
       if (!isEnabled) continue;
       instructions += `\nIf ${criteria} then output @${triggerCode} and nothing else.`;
@@ -209,7 +208,7 @@ class EncounterSession {
     assertNonNullable(this._encounter);
     let reprocessCount = 0;
     const MAX_REPROCESS_COUNT = 3;
-    while(++reprocessCount <= MAX_REPROCESS_COUNT) {
+    while (++reprocessCount <= MAX_REPROCESS_COUNT) {
       this._updateSystemMessage();
       const responseText = await this._onGenerate(this._llmMessages);
       const characterTrigger = _findCharacterTriggerInText(responseText, this._encounter.characterTriggers);
@@ -225,14 +224,14 @@ class EncounterSession {
     }
   }
 
-  async start(encounter:Encounter) {
+  async start(encounter: Encounter) {
     this._encounter = encounter;
-    const {reprocess} = this._handleActions(this._encounter.startActions);
+    const { reprocess } = this._handleActions(this._encounter.startActions);
     this._llmMessages.chatHistory = [];
     if (reprocess) await this._generateWithResponseHandling();
   }
 
-  async startFromUrl(encounterUrl:string) {
+  async startFromUrl(encounterUrl: string) {
     const url = baseUrl(encounterUrl);
     const response = await fetch(url);
     if (!response.ok) throw Error(`Failed to load encounter from URL: ${encounterUrl}`);
@@ -244,25 +243,56 @@ class EncounterSession {
   async restart() {
     if (!this._encounter) throw Error('No encounter loaded');
     this._variables = new VariableManager();
-    const {reprocess} = this._handleActions(this._encounter.startActions);
+    const { reprocess } = this._handleActions(this._encounter.startActions);
     this._llmMessages.chatHistory = [];
     if (reprocess) await this._generateWithResponseHandling();
   }
 
-  async prompt(playerText:string) {
+  async prompt(playerText: string) {
     if (!this._encounter) throw Error('No encounter loaded');
     addUserMessageToChatHistory(this._llmMessages, playerText);
     this._onPlayerMessage(playerText);
     const skipResponseHandling = this._appendMatchingMemoriesToChatHistory(playerText);
     if (skipResponseHandling) return;
+
+    // Evaluate Vector DB Proximity for multiple dimensions
+    if (this._encounter.targetVectors && this._encounter.victoryThreshold !== null) {
+      const { getEmbedding, cosineSimilarity } = await import("@/llm/embeddingUtil");
+      const playerVector = await getEmbedding(playerText);
+
+      let sumMaxSimilarity = 0;
+      for (let i = 0; i < this._encounter.targetVectors.length; ++i) {
+        const targetVector = this._encounter.targetVectors[i];
+        const similarity = cosineSimilarity(playerVector, targetVector);
+
+        const varName = `__vectorProximity_${i}`;
+        const prevMax = (this._variables.get(varName) as number) || 0;
+        const newMax = Math.max(prevMax, similarity);
+        this._variables.set(varName, newMax);
+        sumMaxSimilarity += newMax;
+      }
+
+      const overallProximity = sumMaxSimilarity / this._encounter.targetVectors.length;
+      console.log(`Vector similarity overall for '${playerText}': ${overallProximity}`);
+
+      // Update variables so the UI can draw the proximity meter
+      this._variables.set('__vectorProximity', overallProximity);
+
+      if (overallProximity >= this._encounter.victoryThreshold) {
+        this._onNarrationMessage(`You correctly hit the target concepts! YOU WIN! (Proximity: ${overallProximity.toFixed(2)} >= ${this._encounter.victoryThreshold})`);
+        this._variables.set('__victory', true);
+        return; // Skip LLM generation, the encounter is over due to vector win
+      }
+    }
+
     await this._generateWithResponseHandling();
   }
 
-  getVariables():VariableCollection {
+  getVariables(): VariableCollection {
     return this._variables.toCollection();
   }
 
-  getSystemMessage():string {
+  getSystemMessage(): string {
     return this._llmMessages.systemMessage ?? 'undefined';
   }
 
@@ -274,58 +304,58 @@ class EncounterSession {
     this._functionBindings = [];
   }
 
-  unbindFunction(functionName:string) {
-    switch(functionName) {
+  unbindFunction(functionName: string) {
+    switch (functionName) {
       case 'onGenerate':
         this._onGenerate = _defaultOnGenerate;
-      break;
+        break;
 
       case 'onCharacterMessage':
         this._onCharacterMessage = _defaultOnCharacterMessage;
-      break;
+        break;
 
       case 'onNarrationMessage':
         this._onNarrationMessage = _defaultOnNarrationMessage;
-      break;
+        break;
 
       case 'onPlayerMessage':
         this._onPlayerMessage = _defaultOnPlayerMessage;
-      break;
+        break;
 
       default:
         this._functionBindings = this._functionBindings.filter(binding => binding.functionName !== functionName);
-      break;
+        break;
     }
   }
 
-  bindFunction(func:Function, functionName?:string) {
+  bindFunction(func: Function, functionName?: string) {
     if (!functionName) functionName = func.name;
     const paramCount = func.length;
     this.unbindFunction(functionName);
-    switch(functionName) {
+    switch (functionName) {
       case 'onGenerate':
         assert(paramCount === 1);
         this._onGenerate = func as GenerateCallback;
-      break;
+        break;
 
       case 'onCharacterMessage':
         assert(paramCount === 1);
         this._onCharacterMessage = func as MessageCallback;
-      break;
+        break;
 
       case 'onNarrationMessage':
         assert(paramCount === 1);
         this._onNarrationMessage = func as MessageCallback;
-      break;
+        break;
 
       case 'onPlayerMessage':
         assert(paramCount === 1);
         this._onPlayerMessage = func as MessageCallback;
-      break;
+        break;
 
       default:
         this._functionBindings.push({ functionName, paramCount, function: func });
-      break;
+        break;
     }
   }
 }
