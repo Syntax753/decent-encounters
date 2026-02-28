@@ -1,9 +1,9 @@
 <!-- Encounter v0.1 -->
 # General
-* title=Scam Town Circus
+* title=Scam Town Circus - Get a Job
 * model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k
 
-* target_vector_text=job, chores, prove, worth, clean, tidy, wash, sweep, mop, scrub, dust, vacuum, help, feed
+* target_vector=job, chores, prove, worth, clean, tidy, wash, sweep, mop, scrub, dust, vacuum, help, feed
 * target_threshold=0.70
 
 * side_vector=trapezist,encounters/chars/trapezist.md,0.7,high,fly,jump,airborne,adrenaline,catch,bird

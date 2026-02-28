@@ -544,6 +544,10 @@ class EncounterSession {
         break;
     }
   }
+
+  setOnEncounterLoaded(callback: EncounterLoadedCallback) {
+    this._onEncounterLoaded = callback;
+  }
 }
 
 export default EncounterSession;

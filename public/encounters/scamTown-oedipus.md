@@ -4,10 +4,10 @@
 * title=Rex
 * model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k
 
-* target_vector_text=focus on me, talk about me, tell my story, my experience, my problems, my life, my thoughts, my feelings, my opinions, my perspective, my point of view, my view, my take, my idea, my plan, my suggestion, my recommendation, my advice, my opinion, my thought, my feeling
+* target_vector=focus on me, talk about me, tell my story, my experience, my problems, my life, my thoughts, my feelings, my opinions, my perspective, my point of view, my view, my take, my idea, my plan, my suggestion, my recommendation, my advice, my opinion, my thought, my feeling
 * target_threshold=0.95
 
-* loss_vector_text=focus on you, talk about you, tell your story, your experience, your problems, your life, your thoughts, your feelings, your opinions, your perspective, your point of view, your view, your take, your idea, your plan, your suggestion, your recommendation, your opinion, your thought, your feeling
+* loss_vector=focus on you, talk about you, tell your story, your experience, your problems, your life, your thoughts, your feelings, your opinions, your perspective, your point of view, your view, your take, your idea, your plan, your suggestion, your recommendation, your opinion, your thought, your feeling
 * loss_threshold=0.05
 
 * history_limit=5

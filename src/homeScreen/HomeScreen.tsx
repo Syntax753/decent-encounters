@@ -21,16 +21,17 @@ function HomeScreen() {
   const [lines, setLines] = useState<TextConsoleLine[]>([]);
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [modalDialogName, setModalDialogName] = useState<string | null>(null);
+  const [selectedEncounterUrl, setSelectedEncounterUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (isLoading) return;
 
-    init(setEncounter, setLines, setModalDialogName).then(isLlmConnected => {
+    init(setEncounter, setLines, setModalDialogName, selectedEncounterUrl).then(isLlmConnected => {
       if (!isLlmConnected) { setIsLoading(true); return; }
     });
   }, [isLoading]);
 
-  if (isLoading) return <LoadScreen onComplete={() => setIsLoading(false)} />;
+  if (isLoading) return <LoadScreen onComplete={(url) => { setSelectedEncounterUrl(url); setIsLoading(false); }} />;
   if (!encounter) return null;
 
   const vars = getVariables();

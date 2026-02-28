@@ -1,7 +1,7 @@
 <!-- Encounter v0.1 -->
 # General
 
-* title=The Bridge Troll
+* title=The Under-the-Bridge Troll
 * model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k
 
 # Start

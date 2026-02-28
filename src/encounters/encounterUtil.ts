@@ -84,3 +84,22 @@ export async function enableConditionalCharacterTriggers(characterTriggers: Char
     trigger.isEnabled = sessionVariables.get('__result');
   }
 }
+
+export type EncounterStub = {
+  url: string;
+  title: string;
+};
+
+export async function loadEncounterList(): Promise<EncounterStub[]> {
+  const stubs: EncounterStub[] = [];
+  const files = import.meta.glob('/public/encounters/**/*.md', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>;
+  for (const path in files) {
+    const text = await files[path]();
+    const titleMatch = text.match(/^\*\s*title\s*=\s*(.+)$/m);
+    const title = titleMatch ? titleMatch[1].trim() : path.split('/').pop() || 'Untitled';
+    const url = path.replace('/public/', '');
+    stubs.push({ url, title });
+  }
+  stubs.sort((a, b) => a.title.localeCompare(b.title));
+  return stubs;
+}
