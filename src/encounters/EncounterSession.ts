@@ -299,9 +299,11 @@ class EncounterSession {
 
         let debugOutput = `\n--- Instinct Scoring Debug ---\n`;
         debugOutput += `Player Text : "${playerText}"\n`;
-        debugOutput += `Win History : [${winHistory.map(w => w.toFixed(2)).join(', ')}]\n`;
-        debugOutput += `Loss History: [${lossHistory.map(l => l.toFixed(2)).join(', ')}]\n`;
+        debugOutput += `Win History : [${winHistory.slice().reverse().map(w => w.toFixed(2)).join(', ')}]\n`;
+        debugOutput += `Loss History: [${lossHistory.slice().reverse().map(l => l.toFixed(2)).join(', ')}]\n`;
         debugOutput += `Weights Applied (Inverse ln(x)):\n`;
+
+        let debugWeightsLog = '';
 
         for (let i = 0; i < winHistory.length; i++) {
           const age = winHistory.length - i; // newest is 1
@@ -315,8 +317,11 @@ class EncounterSession {
           weightedLossSum += wLoss * weight;
           sumWeights += weight;
 
-          debugOutput += `  Age ${age} (Turn ${i + 1}) -> Weight: ${weight.toFixed(3)} | Win: ${wWin.toFixed(2)}, Loss: ${wLoss.toFixed(2)}\n`;
+          // Prepend to display newest items (Age 1) first
+          debugWeightsLog = `  Age ${age} (Turn ${i + 1}) -> Weight: ${weight.toFixed(3)} | Win: ${wWin.toFixed(2)}, Loss: ${wLoss.toFixed(2)}\n` + debugWeightsLog;
         }
+
+        debugOutput += debugWeightsLog;
 
         const avgWin = sumWeights > 0 ? weightedWinSum / sumWeights : 0;
         const avgLoss = sumWeights > 0 ? weightedLossSum / sumWeights : 0;

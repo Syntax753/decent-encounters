@@ -5,7 +5,7 @@
 * model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k
 
 * target_vector=identification, deed, title, lease, contract, property manager, owner's name, receipt, escrow, payment trail, certified check, health code, sanitation, illegal, locksmith, background check, police, authorities, fake, scam
-* target_threshold=0.85
+* target_threshold=0.90
 
 * loss_vector=cash, atm, withdraw, ready, now, immediately, full amount, total, understandable, makes sense, beautiful, love it, please, sir, promise, sign, trust, believe
 * loss_threshold=0.25
