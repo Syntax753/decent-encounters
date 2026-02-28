@@ -56,6 +56,15 @@ export async function parseEncounterAsync(text: string): Promise<Encounter> {
     encounter.lossVectors = await Promise.all(dimensions.map(d => getEmbedding(d)));
   }
 
+  if (encounter.sideVectors && encounter.sideVectors.length > 0) {
+    for (const sv of encounter.sideVectors) {
+      if (sv.vectorText) {
+        const dimensions = sv.vectorText.split(',').map(d => d.trim()).filter(d => d.length > 0);
+        sv.vectors = await Promise.all(dimensions.map(d => getEmbedding(d)));
+      }
+    }
+  }
+
   return encounter;
 }
 

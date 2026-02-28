@@ -118,6 +118,42 @@ function HomeScreen() {
               </div>
             </div>
           )}
+
+          {encounter.sideVectors && encounter.sideVectors.map((sv, idx) => {
+            const svInstinctRaw = vars[`__sideVectorInstinct_${idx}`];
+            const svInstinct = typeof svInstinctRaw === 'number' ? svInstinctRaw : 0;
+            const svProximity = svInstinct / 100;
+
+            return (
+              <div key={idx} className={styles.proximityContainer} style={{ marginTop: '8px' }}>
+                <div style={{ position: 'relative', height: '16px', background: '#222', borderRadius: '4px', overflow: 'hidden' }} title={`Side Vector [${sv.name}]: ${svProximity.toFixed(2)}`}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    color: '#ccc', fontSize: '11px', fontWeight: 'bold', zIndex: 2, textShadow: '1px 1px 2px #000', pointerEvents: 'none'
+                  }}>
+                    {sv.name}
+                  </div>
+
+                  <div style={{
+                    position: 'absolute',
+                    top: 0, bottom: 0, left: 0,
+                    width: `${Math.max(0, Math.min(100, svProximity * 100))}%`,
+                    background: '#9c27b0', // purple
+                    transition: 'width 0.3s ease-in-out'
+                  }} />
+
+                  <div style={{
+                    position: 'absolute',
+                    top: 0, bottom: 0,
+                    left: `calc(${sv.threshold * 100}% - 1px)`,
+                    width: '2px',
+                    background: 'rgba(255, 215, 0, 0.5)'
+                  }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
         <Chat className={styles.chat} lines={lines} onChatInput={(prompt) => submitPrompt(prompt)} />
       </div>

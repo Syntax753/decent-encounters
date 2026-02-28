@@ -8,6 +8,14 @@ export enum SceneType {
   DEFAULT = 'DEFAULT'
 }
 
+export type SideVector = {
+  name: string,
+  url: string,
+  threshold: number,
+  vectorText: string,
+  vectors: number[][] | null
+}
+
 type EncounterV0 = {
   version: string,
   title: string,
@@ -27,6 +35,7 @@ type EncounterV0 = {
   weightedProximity: boolean,
   switchType: 'false' | 'reset' | 'reverse',
   baseInstinct: 'fixed' | 'dynamic',
+  sideVectors: SideVector[],
   sourceText: string | null // For authoring use cases, source text is needed to preserve comments and formatting. For playback-only use cases, this can be null.
 }
 

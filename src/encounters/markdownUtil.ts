@@ -1,9 +1,9 @@
 // Type for associative array
-type Sections = { [sectionName:string]:string };
-type NameValues = { [name:string]:string };
+type Sections = { [sectionName: string]: string };
+export type NameValues = { [name: string]: string | string[] };
 
 // E.g., "hello world" -> "helloWorld".
-export function textToCamelCase(text:string):string {
+export function textToCamelCase(text: string): string {
   return text
     .split(' ')
     .filter(word => word.trim() !== '')
@@ -12,14 +12,14 @@ export function textToCamelCase(text:string):string {
 }
 
 // Parse the heading sections of a markdown text. The header of each section is the section name, and the content of each section is the value for the section.
-function _parseSectionArrays(markdownText:string, indentLevel:number = 1, useCamelCase:boolean = false):{sectionNames:string[], sectionContents:string[]} {
-  const _addSection = (_sectionName:string, _sectionContent:string) => {
+function _parseSectionArrays(markdownText: string, indentLevel: number = 1, useCamelCase: boolean = false): { sectionNames: string[], sectionContents: string[] } {
+  const _addSection = (_sectionName: string, _sectionContent: string) => {
     sectionNames.push(_sectionName);
     sectionContents.push(_sectionContent.trim());
   }
 
   const lines = markdownText.split('\n').filter(line => line.trim().length > 0);
-  const sectionNames:string[] = [], sectionContents:string[] = [];
+  const sectionNames: string[] = [], sectionContents: string[] = [];
 
   const prefix = '#'.repeat(indentLevel) + ' ';
   const prefixLength = prefix.length;
@@ -37,13 +37,13 @@ function _parseSectionArrays(markdownText:string, indentLevel:number = 1, useCam
   }
   if (sectionName) _addSection(sectionName, sectionContent); // Store the last section.
 
-  return {sectionNames, sectionContents};
+  return { sectionNames, sectionContents };
 }
 
 // Parse the heading sections of a markdown text. The header of each section is the sectionName key, and the content of each section is the value.
-export function parseSections(markdownText:string, indentLevel:number = 1, useCamelCase:boolean = false):Sections {
-  const sections:Sections = {};
-  const {sectionNames, sectionContents} = _parseSectionArrays(markdownText, indentLevel, useCamelCase);
+export function parseSections(markdownText: string, indentLevel: number = 1, useCamelCase: boolean = false): Sections {
+  const sections: Sections = {};
+  const { sectionNames, sectionContents } = _parseSectionArrays(markdownText, indentLevel, useCamelCase);
   for (let i = 0; i < sectionNames.length; ++i) {
     sections[sectionNames[i]] = sectionContents[i];
   }
@@ -51,7 +51,7 @@ export function parseSections(markdownText:string, indentLevel:number = 1, useCa
 }
 
 // Parse the lines of a markdown text. Remove any extra whitespace or bullet points.
-function _parseLines(markdownText:string):string[] {
+function _parseLines(markdownText: string): string[] {
   const lines = markdownText.split('\n');
   return lines
     .map(line => line.trim())
@@ -59,12 +59,12 @@ function _parseLines(markdownText:string):string[] {
 }
 
 // Parse the value portion of markdown text and replace any supported escaping, e.g. "\n".
-function _unescapeValue(text:string):string {
+function _unescapeValue(text: string): string {
   return text.replace(/\\n/g, '\n'); // Replace "\n" with a newline character.
 }
 
-export function parseNameValueLines(markdownText:string):NameValues {
-  const nameValues:NameValues = {};
+export function parseNameValueLines(markdownText: string): NameValues {
+  const nameValues: NameValues = {};
   const lines = _parseLines(markdownText);
   for (let i = 0; i < lines.length; ++i) {
     const line = lines[i];
@@ -73,7 +73,15 @@ export function parseNameValueLines(markdownText:string):NameValues {
     if (hyphenPos === -1) continue;
     const name = line.slice(2, hyphenPos).trim();
     const value = _unescapeValue(line.slice(hyphenPos + 1).trim());
-    nameValues[name] = value;
+    if (nameValues[name] !== undefined) {
+      if (Array.isArray(nameValues[name])) {
+        (nameValues[name] as string[]).push(value);
+      } else {
+        nameValues[name] = [nameValues[name] as string, value];
+      }
+    } else {
+      nameValues[name] = value;
+    }
   }
   return nameValues;
 }

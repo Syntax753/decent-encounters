@@ -16,6 +16,7 @@ import FunctionBinding from "@/spielCode/types/FunctionBinding";
 
 type GenerateCallback = (messages: LLMMessages) => Promise<string>;
 type MessageCallback = (text: string) => void;
+type EncounterLoadedCallback = (encounter: Encounter) => void;
 
 function _textToEncounter(text: string): Encounter {
   const version = parseVersion(text);
@@ -104,6 +105,7 @@ class EncounterSession {
   private _onCharacterMessage: MessageCallback;
   private _onNarrationMessage: MessageCallback;
   private _onPlayerMessage: MessageCallback;
+  private _onEncounterLoaded: EncounterLoadedCallback | null = null;
   private _llmMessages: LLMMessages;
   private _functionBindings: FunctionBinding[] = [];
 
@@ -234,12 +236,13 @@ class EncounterSession {
   }
 
   async startFromUrl(encounterUrl: string) {
-    const url = baseUrl(encounterUrl);
-    const response = await fetch(url);
-    if (!response.ok) throw Error(`Failed to load encounter from URL: ${encounterUrl}`);
-    const text = await response.text();
-    const encounter = _textToEncounter(text);
-    return this.start(encounter);
+    const { loadEncounter } = await import("./encounterUtil");
+    const encounter = await loadEncounter(encounterUrl);
+    if (this._onEncounterLoaded !== null) {
+      this._onEncounterLoaded(encounter);
+    } else {
+      await this.start(encounter);
+    }
   }
 
   async restart() {
@@ -418,6 +421,53 @@ class EncounterSession {
           this._variables.set('__victory', true);
           return;
         }
+      }
+    }
+
+    if (this._encounter.sideVectors && this._encounter.sideVectors.length > 0) {
+      const { getEmbedding, cosineSimilarity } = await import("@/llm/embeddingUtil");
+      const playerVector = await getEmbedding(playerText);
+
+      let debugOutput = `--- Side Vectors ---\n`;
+      let redirectUrl: string | null = null;
+
+      for (let svIdx = 0; svIdx < this._encounter.sideVectors.length; ++svIdx) {
+        const sv = this._encounter.sideVectors[svIdx];
+        if (!sv.vectors || sv.vectors.length === 0) continue;
+
+        let sumMaxSimilarity = 0;
+        for (let i = 0; i < sv.vectors.length; ++i) {
+          const targetVector = sv.vectors[i];
+          const similarity = cosineSimilarity(playerVector, targetVector);
+
+          const varName = `__sideVectorHistory_${svIdx}_${i}`;
+          const history = (this._variables.get(varName) as number[]) || [];
+          history.push(similarity);
+          if (this._encounter.historyLimit !== null && history.length > this._encounter.historyLimit) {
+            history.shift();
+          }
+          this._variables.set(varName, history);
+
+          sumMaxSimilarity += Math.max(...history);
+        }
+
+        const currentProximity = Math.max(0, Math.min(1, sumMaxSimilarity / sv.vectors.length));
+        const instinct = Math.max(0, Math.min(100, Math.round(currentProximity * 100)));
+
+        this._variables.set(`__sideVectorInstinct_${svIdx}`, instinct);
+        debugOutput += `[${sv.url}] Proximity: ${currentProximity.toFixed(3)}, Instinct: ${instinct}\n`;
+
+        if (currentProximity >= sv.threshold && redirectUrl === null) {
+          debugOutput += `[${sv.url}] threshold ${sv.threshold} reached! Triggering jump.\n`;
+          redirectUrl = sv.url;
+        }
+      }
+      debugOutput += `------------------------------`;
+      console.log(debugOutput);
+
+      if (redirectUrl) {
+        this.startFromUrl(redirectUrl);
+        return; // Halt generating a response to the prompt if we are navigating away.
       }
     }
 

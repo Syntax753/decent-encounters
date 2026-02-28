@@ -140,23 +140,40 @@ export function textToEncounter(text: string): Encounter {
   const sections = parseSections(text);
 
   const generalSettings = sections.General ? parseNameValueLines(sections.General) : {}
-  const title = generalSettings.title || 'Untitled Encounter';
-  const model = generalSettings.model || 'default';
+  const _getString = (val: any): string | undefined => Array.isArray(val) ? val[0] : val;
 
-  const winVectorText = generalSettings.target_vector_text || generalSettings.win_vector_text || null;
-  const lossVectorText = generalSettings.loss_vector_text || null;
-  const targetThresholdRaw = generalSettings.target_threshold || null;
+  const title = _getString(generalSettings.title) || 'Untitled Encounter';
+  const model = _getString(generalSettings.model) || 'default';
+
+  const winVectorText = _getString(generalSettings.target_vector) || null;
+  const lossVectorText = _getString(generalSettings.loss_vector) || null;
+  const targetThresholdRaw = _getString(generalSettings.target_threshold) || null;
   const targetThreshold = targetThresholdRaw ? parseFloat(targetThresholdRaw) : null;
-  const lossThresholdRaw = generalSettings.loss_threshold || null;
+  const lossThresholdRaw = _getString(generalSettings.loss_threshold) || null;
   const lossThreshold = lossThresholdRaw ? parseFloat(lossThresholdRaw) : null;
-  const historyLimitRaw = generalSettings.history_limit || null;
+  const historyLimitRaw = _getString(generalSettings.history_limit) || null;
   const historyLimit = historyLimitRaw ? parseInt(historyLimitRaw) : null;
-  const weightedProximityRaw = generalSettings.weighted_proximity || 'false';
+  const weightedProximityRaw = _getString(generalSettings.weighted_proximity) || 'false';
   const weightedProximity = weightedProximityRaw.toLowerCase() === 'true';
-  const switchTypeRaw = (generalSettings.switch_type || 'false').toLowerCase();
+  const switchTypeRaw = (_getString(generalSettings.switch_type) || 'false').toLowerCase();
   const switchType = (['reset', 'reverse'].includes(switchTypeRaw) ? switchTypeRaw : 'false') as 'false' | 'reset' | 'reverse';
-  const baseInstinctRaw = (generalSettings.base_instinct || 'fixed').toLowerCase();
+  const baseInstinctRaw = (_getString(generalSettings.base_instinct) || 'fixed').toLowerCase();
   const baseInstinct = (baseInstinctRaw === 'dynamic' ? 'dynamic' : 'fixed') as 'fixed' | 'dynamic';
+
+  const sideVectorsRaw = generalSettings.side_vector;
+  const sideVectors: SideVector[] = [];
+  if (sideVectorsRaw !== undefined) {
+    const rawArray = Array.isArray(sideVectorsRaw) ? sideVectorsRaw : [sideVectorsRaw as string];
+    for (const raw of rawArray) {
+      const parts = raw.split(',');
+      if (parts.length < 4) continue;
+      const name = parts[0].trim();
+      const url = parts[1].trim();
+      const threshold = parseFloat(parts[2].trim());
+      const vectorText = parts.slice(3).map(p => p.trim()).join(', ');
+      sideVectors.push({ name, url, threshold, vectorText, vectors: null });
+    }
+  }
 
   const startActions = _parseStartSection(sections.Start);
   const [instructionActions, characterTriggers] = _parseInstructionSection(sections.Instructions);
@@ -176,6 +193,6 @@ export function textToEncounter(text: string): Encounter {
   return {
     version, title, model, startActions, instructionActions, characterTriggers, memories,
     sceneType, winVectorText, winVectors: null, lossVectorText, lossVectors: null,
-    targetThreshold, lossThreshold, historyLimit, weightedProximity, switchType, baseInstinct, sourceText: text
+    targetThreshold, lossThreshold, historyLimit, weightedProximity, switchType, baseInstinct, sideVectors, sourceText: text
   };
 }

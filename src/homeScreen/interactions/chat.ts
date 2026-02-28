@@ -72,13 +72,19 @@ async function _onGenerate(messages: LLMMessages, setLines: Function): Promise<s
   return response;
 }
 
-export function initChat(encounter: Encounter, setLines: Function) {
+export function initChat(encounter: Encounter, setLines: Function, setEncounter: Function) {
   theChatBuffer = new TextConsoleBuffer(MAX_LINE_COUNT);
   theSession = new EncounterSession(MAX_LINE_COUNT);
   theSession.bindFunction((m: LLMMessages) => _onGenerate(m, setLines), 'onGenerate');
   theSession.bindFunction((t: string) => _addCharacterLine(t, setLines), 'onCharacterMessage');
   theSession.bindFunction((t: string) => _addNarrationLine(t, setLines), 'onNarrationMessage');
   theSession.bindFunction((t: string) => _addPlayerLine(t, setLines), 'onPlayerMessage');
+  theSession.setOnEncounterLoaded((enc: Encounter) => {
+    setEncounter(enc);
+    _initForEncounter(enc); // Reboot variables and system messages
+    theChatBuffer?.clear(); // Erase chat history 
+    setLines([...(theChatBuffer?.getLines() || [])]); // Flush UI lines
+  });
   bindEncounterFunctions(theSession);
   _initForEncounter(encounter);
 }

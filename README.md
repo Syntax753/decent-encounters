@@ -52,12 +52,12 @@ Name/value pairs are evaluated. Other kinds of actions are ignored.
 
 ### Instinct Mechanics (Optional)
 
-You can define target and loss vectors to measure the player's vector proximity to certain concepts during conversation. This builds a dynamic 0-100 `instinct` variable tracked internally.
+You can define target and loss vectors to measure the player's vector proximity to certain concepts during conversation. To create these dynamics, define target/loss vectors in the `# General` section of your markdown file.
 
-* target_vector_text=friend, happy, joy, help (comma separated list of terms representing a "win" direction)
-* target_threshold=0.85 (a 0.0-1.0 float threshold to trigger a victory)
-* loss_vector_text=enemy, sad, attack (comma separated list of terms representing a "loss" direction)
-* loss_threshold=0.25 (a 0.0-1.0 float threshold to trigger a loss)
+* `target_vector=[Comma separated list of keywords describing a successful outcome]`
+* `target_threshold=[Threshold 0.0-1.0 to trigger a victory state, e.g. 0.95]`
+* `loss_vector=[Comma separated list of keywords describing a failure outcome]`
+* `loss_threshold=[Threshold 0.0-1.0 to trigger a loss state, e.g. 0.05]`
 * history_limit=5 (the number of turns to look back when averaging proximity scores)
 * weighted_proximity=true/false (defaults to false. If true, dynamically scales the current turn's win/loss weights based on the running proximity average to accelerate the instinct score in a given direction)
 * switch_type=false/reset/reverse (defaults to false. Evaluates when the player flips from a positive trajectory to negative, or vice versa compared to the previous turn. If set to `reset`, the multipliers fallback to 0.5. If set to `reverse`, the multipliers are swapped to heavily impact the new trajectory)
