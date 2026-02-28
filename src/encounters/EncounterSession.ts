@@ -295,7 +295,7 @@ class EncounterSession {
         debugOutput += `Player Text : "${playerText}"\n`;
         debugOutput += `Win History : [${winHistory.map(w => w.toFixed(2)).join(', ')}]\n`;
         debugOutput += `Loss History: [${lossHistory.map(l => l.toFixed(2)).join(', ')}]\n`;
-        debugOutput += `Weights Applied (Inverse ln(x+1)):\n`;
+        debugOutput += `Weights Applied (Inverse ln(x)):\n`;
 
         for (let i = 0; i < winHistory.length; i++) {
           const age = winHistory.length - i; // newest is 1
