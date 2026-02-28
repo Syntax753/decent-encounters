@@ -225,20 +225,21 @@ class EncounterSession {
     }
   }
 
-  async start(encounter:Encounter) {
+  async start(encounter:Encounter, clearVariables = false) {
     this._encounter = encounter;
+    if (clearVariables) this._variables = new VariableManager();
     const {reprocess} = this._handleActions(this._encounter.startActions);
     this._llmMessages.chatHistory = [];
     if (reprocess) await this._generateWithResponseHandling();
   }
 
-  async startFromUrl(encounterUrl:string) {
+  async startFromUrl(encounterUrl:string, clearVariables = false) {
     const url = baseUrl(encounterUrl);
     const response = await fetch(url);
     if (!response.ok) throw Error(`Failed to load encounter from URL: ${encounterUrl}`);
     const text = await response.text();
     const encounter = _textToEncounter(text);
-    return this.start(encounter);
+    return this.start(encounter, clearVariables);
   }
 
   async restart() {

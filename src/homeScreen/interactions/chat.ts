@@ -63,7 +63,7 @@ function _initForEncounter(encounter:Encounter) {
   assertNonNullable(theChatBuffer);
   assertNonNullable(theSession);
   theChatBuffer.clear();
-  theSession.start(encounter);
+  theSession.start(encounter, true);
 }
 
 async function _onGenerate(messages:LLMMessages, setLines:Function):Promise<string> {
