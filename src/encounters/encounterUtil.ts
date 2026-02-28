@@ -68,7 +68,15 @@ export async function parseEncounterAsync(text: string): Promise<Encounter> {
   return encounter;
 }
 
+const encounterModules = import.meta.glob('/src/encounters/**/*.md', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>;
+
 export async function loadEncounter(encounterUrl: string): Promise<Encounter> {
+  const srcPath = `/src/${encounterUrl}`;
+  if (encounterModules[srcPath]) {
+    const text = await encounterModules[srcPath]();
+    return parseEncounterAsync(text);
+  }
+
   const url = baseUrl(encounterUrl);
   const response = await fetch(url);
   if (!response.ok) throw Error(`Failed to load encounter from URL: ${encounterUrl}`);
@@ -92,12 +100,11 @@ export type EncounterStub = {
 
 export async function loadEncounterList(): Promise<EncounterStub[]> {
   const stubs: EncounterStub[] = [];
-  const files = import.meta.glob('/public/encounters/**/*.md', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>;
-  for (const path in files) {
-    const text = await files[path]();
+  for (const path in encounterModules) {
+    const text = await encounterModules[path]();
     const titleMatch = text.match(/^\*\s*title\s*=\s*(.+)$/m);
     const title = titleMatch ? titleMatch[1].trim() : path.split('/').pop() || 'Untitled';
-    const url = path.replace('/public/', '');
+    const url = path.replace('/src/', '');
     stubs.push({ url, title });
   }
   stubs.sort((a, b) => a.title.localeCompare(b.title));

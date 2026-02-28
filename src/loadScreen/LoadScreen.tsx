@@ -23,6 +23,7 @@ function LoadScreen(props: Props) {
   const [currentTask, setCurrentTask] = useState('Loading');
   const [problems, setProblems] = useState<ModelDeviceProblem[] | null>(null);
   const [confirmedUrl, setConfirmedUrl] = useState<string | null>(null);
+  const [isModelLoaded, setIsModelLoaded] = useState<boolean>(false);
   const { onComplete } = props;
 
   useEffect(() => {

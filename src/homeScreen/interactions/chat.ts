@@ -80,7 +80,7 @@ export function initChat(encounter: Encounter, setLines: Function, setEncounter:
   theSession.bindFunction((t: string) => _addNarrationLine(t, setLines), 'onNarrationMessage');
   theSession.bindFunction((t: string) => _addPlayerLine(t, setLines), 'onPlayerMessage');
   theSession.setOnEncounterLoaded((enc: Encounter) => {
-    setEncounter(enc);
+    setEncounter({ ...enc });
     _initForEncounter(enc); // Reboot variables and system messages
     theChatBuffer?.clear(); // Erase chat history 
     setLines([...(theChatBuffer?.getLines() || [])]); // Flush UI lines
