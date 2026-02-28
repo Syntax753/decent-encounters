@@ -151,6 +151,12 @@ export function textToEncounter(text: string): Encounter {
   const lossThreshold = lossThresholdRaw ? parseFloat(lossThresholdRaw) : null;
   const historyLimitRaw = generalSettings.history_limit || null;
   const historyLimit = historyLimitRaw ? parseInt(historyLimitRaw) : null;
+  const weightedProximityRaw = generalSettings.weighted_proximity || 'false';
+  const weightedProximity = weightedProximityRaw.toLowerCase() === 'true';
+  const switchTypeRaw = (generalSettings.switch_type || 'false').toLowerCase();
+  const switchType = (['reset', 'reverse'].includes(switchTypeRaw) ? switchTypeRaw : 'false') as 'false' | 'reset' | 'reverse';
+  const baseInstinctRaw = (generalSettings.base_instinct || 'fixed').toLowerCase();
+  const baseInstinct = (baseInstinctRaw === 'dynamic' ? 'dynamic' : 'fixed') as 'fixed' | 'dynamic';
 
   const startActions = _parseStartSection(sections.Start);
   const [instructionActions, characterTriggers] = _parseInstructionSection(sections.Instructions);
@@ -166,6 +172,6 @@ export function textToEncounter(text: string): Encounter {
   return {
     version, title, model, startActions, instructionActions, characterTriggers, memories,
     sceneType, winVectorText, winVectors: null, lossVectorText, lossVectors: null,
-    targetThreshold, lossThreshold, historyLimit, sourceText: text
+    targetThreshold, lossThreshold, historyLimit, weightedProximity, switchType, baseInstinct, sourceText: text
   };
 }

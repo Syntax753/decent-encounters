@@ -226,6 +226,7 @@ class EncounterSession {
 
   async start(encounter: Encounter) {
     this._encounter = encounter;
+    this._variables.set('instinct', 50);
     const { reprocess } = this._handleActions(this._encounter.startActions);
     this._llmMessages.chatHistory = [];
     if (reprocess) await this._generateWithResponseHandling();
@@ -243,6 +244,7 @@ class EncounterSession {
   async restart() {
     if (!this._encounter) throw Error('No encounter loaded');
     this._variables = new VariableManager();
+    this._variables.set('instinct', 50);
     const { reprocess } = this._handleActions(this._encounter.startActions);
     this._llmMessages.chatHistory = [];
     if (reprocess) await this._generateWithResponseHandling();
@@ -319,14 +321,56 @@ class EncounterSession {
         debugOutput += `Weighted Loss Avg: ${avgLoss.toFixed(3)}\n`;
 
         // Tug-of-war logic based on the difference of the compound averages in the history window
-        const currentProximity = Math.max(0, Math.min(1, 0.50 + (avgWin * 0.5) - (avgLoss * 0.5)));
+        let winMult = 0.5;
+        let lossMult = 0.5;
+        if (this._encounter.weightedProximity) {
+          const previousProximity = (this._variables.get('__vectorProximity') as number) ?? 0.5;
+          winMult = previousProximity;
+          lossMult = 1.0 - previousProximity;
+        }
 
-        debugOutput += `Calculation: 0.50 + (${avgWin.toFixed(3)} * 0.5) - (${avgLoss.toFixed(3)} * 0.5) = ${currentProximity.toFixed(3)}\n`;
+        let isSwitch = false;
+        if (winHistory.length >= 2 && lossHistory.length >= 2) {
+          const currWin = winHistory[winHistory.length - 1];
+          const currLoss = lossHistory[lossHistory.length - 1];
+          const prevWin = winHistory[winHistory.length - 2];
+          const prevLoss = lossHistory[lossHistory.length - 2];
+
+          if (currWin > currLoss && prevWin < prevLoss) isSwitch = true;
+          if (currLoss > currWin && prevLoss < prevWin) isSwitch = true;
+        }
+
+        if (isSwitch) {
+          debugOutput += `Switch Detected: win vs loss proximity changed direction!\n`;
+          if (this._encounter.switchType === 'reset') {
+            winMult = 0.5;
+            lossMult = 0.5;
+            debugOutput += `Switch Type 'reset' applied: Multipliers reset to 0.5\n`;
+          } else if (this._encounter.switchType === 'reverse') {
+            const temp = winMult;
+            winMult = lossMult;
+            lossMult = temp;
+            debugOutput += `Switch Type 'reverse' applied: Multipliers swapped.\n`;
+          }
+        }
+
+        let baseValue = 0.50;
+        if (this._encounter.baseInstinct === 'dynamic') {
+          baseValue = (this._variables.get('__vectorProximity') as number) ?? 0.5;
+        }
+
+        const currentProximity = Math.max(0, Math.min(1, baseValue + (avgWin * winMult) - (avgLoss * lossMult)));
+
+        const instinct = Math.max(0, Math.min(100, Math.round(currentProximity * 100)));
+
+        debugOutput += `Calculation: ${baseValue.toFixed(2)} + (${avgWin.toFixed(3)} * ${winMult.toFixed(3)}) - (${avgLoss.toFixed(3)} * ${lossMult.toFixed(3)}) = ${currentProximity.toFixed(3)}\n`;
         debugOutput += `Final Instinct Proximity: ${currentProximity.toFixed(3)}\n`;
+        debugOutput += `Instinct: ${instinct}\n`;
         debugOutput += `------------------------------`;
         console.log(debugOutput);
 
         this._variables.set('__vectorProximity', currentProximity);
+        this._variables.set('instinct', instinct);
 
         if (this._encounter.targetThreshold !== null && currentProximity >= this._encounter.targetThreshold) {
           this._onNarrationMessage(`That went well!...`);
@@ -362,9 +406,11 @@ class EncounterSession {
 
         const progWinMax = this._encounter.winVectors && this._encounter.winVectors.length > 0 ? sumMaxWinSimilarity / this._encounter.winVectors.length : 0.0;
         const currentProximity = progWinMax;
+        const instinct = Math.max(0, Math.min(100, Math.round(currentProximity * 100)));
 
-        console.log(`Vector similarity overall for '${playerText}': Win=${progWinMax.toFixed(2)}, Proximity=${currentProximity.toFixed(2)}`);
+        console.log(`Vector similarity overall for '${playerText}': Win=${progWinMax.toFixed(2)}, Proximity=${currentProximity.toFixed(2)}\nInstinct: ${instinct}`);
         this._variables.set('__vectorProximity', currentProximity);
+        this._variables.set('instinct', instinct);
 
         if (this._encounter.targetThreshold !== null && currentProximity >= this._encounter.targetThreshold) {
           this._onNarrationMessage(`That went well!...`);

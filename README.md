@@ -50,6 +50,19 @@ Name/value pairs are evaluated. Other kinds of actions are ignored.
 * title=The Troll Bridge (a display name describing the encounter)
 * model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k (the model that the encounter was designed to use. Used for giving a warning to player if the model doesn't match.)
 
+### Instinct Mechanics (Optional)
+
+You can define target and loss vectors to measure the player's vector proximity to certain concepts during conversation. This builds a dynamic 0-100 `instinct` variable tracked internally.
+
+* target_vector_text=friend, happy, joy, help (comma separated list of terms representing a "win" direction)
+* target_threshold=0.85 (a 0.0-1.0 float threshold to trigger a victory)
+* loss_vector_text=enemy, sad, attack (comma separated list of terms representing a "loss" direction)
+* loss_threshold=0.25 (a 0.0-1.0 float threshold to trigger a loss)
+* history_limit=5 (the number of turns to look back when averaging proximity scores)
+* weighted_proximity=true/false (defaults to false. If true, dynamically scales the current turn's win/loss weights based on the running proximity average to accelerate the instinct score in a given direction)
+* switch_type=false/reset/reverse (defaults to false. Evaluates when the player flips from a positive trajectory to negative, or vice versa compared to the previous turn. If set to `reset`, the multipliers fallback to 0.5. If set to `reverse`, the multipliers are swapped to heavily impact the new trajectory)
+* base_instinct=fixed/dynamic (defaults to fixed. If `dynamic` is set, the mathematical 0.5 center of the proximity formula is dynamically swapped out with the character's previous instinct proximity score)
+
 ## Start Section
 
 Character/player/narration messages and code blocks are evaluated. Other kinds of actions are ignored.

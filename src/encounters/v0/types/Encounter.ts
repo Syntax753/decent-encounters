@@ -24,6 +24,9 @@ type EncounterV0 = {
   targetThreshold: number | null,
   lossThreshold: number | null,
   historyLimit: number | null,
+  weightedProximity: boolean,
+  switchType: 'false' | 'reset' | 'reverse',
+  baseInstinct: 'fixed' | 'dynamic',
   sourceText: string | null // For authoring use cases, source text is needed to preserve comments and formatting. For playback-only use cases, this can be null.
 }
 
