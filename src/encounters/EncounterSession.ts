@@ -286,12 +286,46 @@ class EncounterSession {
         if (this._encounter.historyLimit !== null && lossHistory.length > this._encounter.historyLimit) lossHistory.shift();
         this._variables.set('__lossProximityTurnHistory', lossHistory);
 
-        const avgWin = winHistory.reduce((a, b) => a + b, 0) / winHistory.length;
-        const avgLoss = lossHistory.reduce((a, b) => a + b, 0) / lossHistory.length;
+        // Calculate inverse ln(x) weighted average
+        let sumWeights = 0;
+        let weightedWinSum = 0;
+        let weightedLossSum = 0;
+
+        let debugOutput = `\n--- Instinct Scoring Debug ---\n`;
+        debugOutput += `Player Text : "${playerText}"\n`;
+        debugOutput += `Win History : [${winHistory.map(w => w.toFixed(2)).join(', ')}]\n`;
+        debugOutput += `Loss History: [${lossHistory.map(l => l.toFixed(2)).join(', ')}]\n`;
+        debugOutput += `Weights Applied (Inverse ln(x+1)):\n`;
+
+        for (let i = 0; i < winHistory.length; i++) {
+          const age = winHistory.length - i; // newest is 1
+
+          const weight = 1 / Math.log(age + 1); // inverse ln(x+1) to avoid log(1)=0
+
+          const wWin = winHistory[i];
+          const wLoss = lossHistory[i] !== undefined ? lossHistory[i] : 0;
+
+          weightedWinSum += wWin * weight;
+          weightedLossSum += wLoss * weight;
+          sumWeights += weight;
+
+          debugOutput += `  Age ${age} (Turn ${i + 1}) -> Weight: ${weight.toFixed(3)} | Win: ${wWin.toFixed(2)}, Loss: ${wLoss.toFixed(2)}\n`;
+        }
+
+        const avgWin = sumWeights > 0 ? weightedWinSum / sumWeights : 0;
+        const avgLoss = sumWeights > 0 ? weightedLossSum / sumWeights : 0;
+
+        debugOutput += `Weighted Win Avg : ${avgWin.toFixed(3)}\n`;
+        debugOutput += `Weighted Loss Avg: ${avgLoss.toFixed(3)}\n`;
 
         // Tug-of-war logic based on the difference of the compound averages in the history window
         const currentProximity = Math.max(0, Math.min(1, 0.50 + (avgWin * 0.5) - (avgLoss * 0.5)));
-        console.log(`Vector similarity tuple for '${playerText}': Win=${avgWin.toFixed(2)}, Loss=${avgLoss.toFixed(2)}, Proximity=${currentProximity.toFixed(2)}`);
+
+        debugOutput += `Calculation: 0.50 + (${avgWin.toFixed(3)} * 0.5) - (${avgLoss.toFixed(3)} * 0.5) = ${currentProximity.toFixed(3)}\n`;
+        debugOutput += `Final Instinct Proximity: ${currentProximity.toFixed(3)}\n`;
+        debugOutput += `------------------------------`;
+        console.log(debugOutput);
+
         this._variables.set('__vectorProximity', currentProximity);
 
         if (this._encounter.targetThreshold !== null && currentProximity >= this._encounter.targetThreshold) {
