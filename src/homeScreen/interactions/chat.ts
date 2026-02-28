@@ -111,6 +111,10 @@ export function restartEncounter() {
   theSession.restart();
 }
 
+export function jumpToUrl(url: string) {
+  theSession?.startFromUrl(url);
+}
+
 const promptQueue: string[] = [];
 let isProcessingPrompt = false;
 

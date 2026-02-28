@@ -6,7 +6,8 @@ import LoadScreen from '@/loadScreen/LoadScreen';
 import TopBar from '@/components/topBar/TopBar';
 import Chat from "@/components/chat/Chat";
 import { TextConsoleLine } from "@/components/textConsole/TextConsoleBuffer";
-import { getVariables, restartEncounter, submitPrompt, updateEncounter } from "./interactions/chat";
+import { getVariables, restartEncounter, submitPrompt, updateEncounter, jumpToUrl } from "./interactions/chat";
+import SceneSelector from "@/components/sceneSelector/SceneSelector";
 import Encounter, { SceneType } from "@/encounters/types/Encounter";
 import ContentButton from "@/components/contentButton/ContentButton";
 import EncounterConfigDialog from "./dialogs/EncounterConfigDialog";
@@ -22,6 +23,7 @@ function HomeScreen() {
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [modalDialogName, setModalDialogName] = useState<string | null>(null);
   const [selectedEncounterUrl, setSelectedEncounterUrl] = useState<string | undefined>(undefined);
+  const [isSceneSelecting, setIsSceneSelecting] = useState<boolean>(false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -31,6 +33,16 @@ function HomeScreen() {
     });
   }, [isLoading]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading && encounter) {
+        setIsSceneSelecting(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLoading, encounter]);
+
   if (isLoading) return <LoadScreen onComplete={(url) => { setSelectedEncounterUrl(url); setIsLoading(false); }} />;
   if (!encounter) return null;
 
@@ -38,6 +50,28 @@ function HomeScreen() {
   const proximityRaw = vars['__vectorProximity'];
   const proximity = typeof proximityRaw === 'number' ? proximityRaw : (encounter.sceneType === SceneType.WIN_LOSE ? 0.5 : 0);
   const isVictory = vars['__victory'] === true;
+
+  if (isSceneSelecting) {
+    return (
+      <div style={{
+        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+        backgroundColor: '#fff',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <SceneSelector
+          onSelect={(url) => {
+            setIsSceneSelecting(false);
+            jumpToUrl(url);
+          }}
+          onCancel={() => setIsSceneSelecting(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
