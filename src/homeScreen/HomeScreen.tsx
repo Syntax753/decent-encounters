@@ -15,12 +15,14 @@ import { importEncounterFile } from "./interactions/import";
 import { downloadEncounter } from "./interactions/export";
 import AboutDialog from "./dialogs/AboutDialog";
 import WrongModelDialog from "./dialogs/WrongModelDialog";
+import { getRecentPrompts } from "@/persistence/recentPrompts";
 
 function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [lines, setLines] = useState<TextConsoleLine[]>([]);
   const [encounter, setEncounter] = useState<Encounter|null>(null);
   const [modalDialogName, setModalDialogName] = useState<string|null>(null);
+  const [recentPrompts, setRecentPrompts] = useState<string[]>([]);
   
   useEffect(() => {
     if (isLoading) return;
@@ -30,6 +32,11 @@ function HomeScreen() {
     });
   }, [isLoading]);
 
+  useEffect(() => {
+    if (!encounter) return;
+    getRecentPrompts(encounter.title).then(setRecentPrompts);
+  }, [encounter]);
+
   if (isLoading) return <LoadScreen onComplete={() => setIsLoading(false)} />;
   if (!encounter) return null;
   
@@ -38,7 +45,7 @@ function HomeScreen() {
       <TopBar onAboutClick={() => setModalDialogName(AboutDialog.name)}/>
       <div className={styles.content}>
         <h1>{encounter.title}</h1>
-        <Chat className={styles.chat} lines={lines} onChatInput={(prompt) => submitPrompt(prompt)} />
+        <Chat className={styles.chat} lines={lines} onChatInput={(prompt) => submitPrompt(prompt, setRecentPrompts)} recentPrompts={recentPrompts} />
       </div>
       <div className={styles.encounterActions}>
         <h1>Encounter</h1>

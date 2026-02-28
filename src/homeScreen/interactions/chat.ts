@@ -10,6 +10,7 @@ import { stripTriggerCodes } from "@/encounters/encounterUtil";
 import { generate, isLlmConnected } from "@/llm/llmUtil";
 import { VariableCollection } from "@/spielCode/VariableManager";
 import { bindEncounterFunctions } from "./encounterFunctions";
+import { appendRecentPrompt } from "@/persistence/recentPrompts";
 
 const MAX_LINE_COUNT = 100;
 
@@ -105,7 +106,7 @@ export function restartEncounter() {
   theSession.restart();
 }
 
-export async function submitPrompt(prompt:string) {
+export async function submitPrompt(prompt:string, setRecentPrompts:Function) {
   if (!isLlmConnected()) { 
     const message = isServingLocally() 
     ? `LLM is not connected. You're in a dev environment where this is expected (hot reloads, canceling the LLM load). You can refresh the page to load the LLM.`
@@ -115,5 +116,7 @@ export async function submitPrompt(prompt:string) {
   }
 
   assertNonNullable(theSession);
+  const nextRecentPrompts = await appendRecentPrompt(theSession.title, prompt);
+  setRecentPrompts(nextRecentPrompts);
   await theSession.prompt(prompt);
 }

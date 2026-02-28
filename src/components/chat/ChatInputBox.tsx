@@ -1,24 +1,52 @@
 import styles from './ChatInputBox.module.css';
 
 import ContentButton from '../contentButton/ContentButton';
-import {useState} from "react";
+import {useState, useEffect} from "react";
 
 type Props = {
   onSubmit:(text:string) => void,
-  disabled?:boolean
+  disabled?:boolean,
+  recentPrompts:string[]
 }
 
 function ChatInputBox(props:Props) {
-  const { onSubmit, disabled } = props;
+  const { onSubmit, disabled, recentPrompts } = props;
   const [text, setText] = useState<string>('');
+  const [recentPromptI, setRecentPromptI] = useState<number>(recentPrompts.length);
+
+  useEffect(() => {
+    setRecentPromptI(recentPrompts.length);
+  }, [recentPrompts])
   
   function _onSubmit() {
-    onSubmit(text);
+    setRecentPromptI(recentPrompts.length);
+    onSubmit(text); // Caller is responsible for adding prompt to recent prompts list.
     setText('');
+  }
+
+  function _onSelectUp() {
+    if (recentPromptI > 0) {
+      const nextPromptI = recentPromptI - 1;
+      setRecentPromptI(nextPromptI);
+      setText(recentPrompts[nextPromptI]);
+    }
+  }
+
+  function _onSelectDown() {
+    if (recentPromptI < recentPrompts.length - 1) {
+      const nextPromptI = recentPromptI + 1;
+      setRecentPromptI(nextPromptI);
+      setText(recentPrompts[nextPromptI]);
+    } else {
+      setRecentPromptI(recentPrompts.length);
+      setText('');
+    }
   }
   
   function _onKeyDown(e:React.KeyboardEvent<HTMLInputElement>) {
     if(e.key === 'Enter' && text !== '') _onSubmit();
+    else if (e.key === 'ArrowUp') _onSelectUp();
+    else if (e.key === 'ArrowDown') _onSelectDown();
   }
   
   return (

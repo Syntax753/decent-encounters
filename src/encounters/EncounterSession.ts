@@ -329,6 +329,10 @@ class EncounterSession {
       break;
     }
   }
+
+  get title():string {
+    return this._encounter?.title ?? 'undefined';
+  }
 }
 
 export default EncounterSession;
