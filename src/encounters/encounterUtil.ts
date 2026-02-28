@@ -40,15 +40,20 @@ export function stripTriggerCodes(responseText: string): string {
 
 import { getEmbedding } from "@/llm/embeddingUtil";
 
-async function _textToEncounter(text: string): Promise<Encounter> {
+export async function parseEncounterAsync(text: string): Promise<Encounter> {
   const version = parseVersion(text);
   const majorVersionNo = majorVersion(version); // For now, only v0 is supported.
   if (majorVersionNo !== LATEST_MAJOR_VERSION) throw Error(`Unsupported encounter version: ${version}`);
   const encounter = textToEncounter(text);
 
-  if (encounter.targetVectorText) {
-    const dimensions = encounter.targetVectorText.split(',').map(d => d.trim()).filter(d => d.length > 0);
-    encounter.targetVectors = await Promise.all(dimensions.map(d => getEmbedding(d)));
+  if (encounter.winVectorText) {
+    const dimensions = encounter.winVectorText.split(',').map(d => d.trim()).filter(d => d.length > 0);
+    encounter.winVectors = await Promise.all(dimensions.map(d => getEmbedding(d)));
+  }
+
+  if (encounter.lossVectorText) {
+    const dimensions = encounter.lossVectorText.split(',').map(d => d.trim()).filter(d => d.length > 0);
+    encounter.lossVectors = await Promise.all(dimensions.map(d => getEmbedding(d)));
   }
 
   return encounter;
@@ -59,7 +64,7 @@ export async function loadEncounter(encounterUrl: string): Promise<Encounter> {
   const response = await fetch(url);
   if (!response.ok) throw Error(`Failed to load encounter from URL: ${encounterUrl}`);
   const text = await response.text();
-  return _textToEncounter(text);
+  return parseEncounterAsync(text);
 }
 
 export async function enableConditionalCharacterTriggers(characterTriggers: CharacterTrigger[], sessionVariables: VariableManager) {

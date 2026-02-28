@@ -1,6 +1,12 @@
-import Action from "./Action"
-import CharacterTrigger from "./CharacterTrigger"
+import Action from "./Action";
+import CharacterTrigger from "./CharacterTrigger";
 import Memory from "./Memory";
+
+export enum SceneType {
+  WIN_ONLY = 'WIN_ONLY',
+  WIN_LOSE = 'WIN_LOSE',
+  UNKNOWN = 'UNKNOWN'
+}
 
 type EncounterV0 = {
   version: string,
@@ -10,9 +16,14 @@ type EncounterV0 = {
   instructionActions: Action[],
   characterTriggers: CharacterTrigger[],
   memories: Memory[],
-  targetVectorText: string | null,
-  targetVectors: number[][] | null,
-  victoryThreshold: number | null,
+  sceneType: SceneType,
+  winVectorText: string | null,
+  winVectors: number[][] | null,
+  lossVectorText: string | null,
+  lossVectors: number[][] | null,
+  targetThreshold: number | null,
+  lossThreshold: number | null,
+  historyLimit: number | null,
   sourceText: string | null // For authoring use cases, source text is needed to preserve comments and formatting. For playback-only use cases, this can be null.
 }
 

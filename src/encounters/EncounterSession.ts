@@ -1,5 +1,5 @@
 import LLMMessages from "@/llm/types/LLMMessages";
-import Encounter, { LATEST_MAJOR_VERSION } from "./types/Encounter";
+import Encounter, { LATEST_MAJOR_VERSION, SceneType } from "./types/Encounter";
 import VariableManager, { VariableCollection } from "@/spielCode/VariableManager";
 import { majorVersion, parseVersion } from "./versionUtil";
 import { textToEncounter } from "./v0/readerUtil";
@@ -256,32 +256,87 @@ class EncounterSession {
     if (skipResponseHandling) return;
 
     // Evaluate Vector DB Proximity for multiple dimensions
-    if (this._encounter.targetVectors && this._encounter.victoryThreshold !== null) {
+    if (this._encounter.sceneType !== SceneType.UNKNOWN) {
       const { getEmbedding, cosineSimilarity } = await import("@/llm/embeddingUtil");
       const playerVector = await getEmbedding(playerText);
 
-      let sumMaxSimilarity = 0;
-      for (let i = 0; i < this._encounter.targetVectors.length; ++i) {
-        const targetVector = this._encounter.targetVectors[i];
-        const similarity = cosineSimilarity(playerVector, targetVector);
+      if (this._encounter.sceneType === SceneType.WIN_LOSE) {
+        // WIN_LOSE uses compound average of turn maximums
+        let currentTurnMaxWin = 0;
+        if (this._encounter.winVectors) {
+          for (const vector of this._encounter.winVectors) {
+            currentTurnMaxWin = Math.max(currentTurnMaxWin, cosineSimilarity(playerVector, vector));
+          }
+        }
 
-        const varName = `__vectorProximity_${i}`;
-        const prevMax = (this._variables.get(varName) as number) || 0;
-        const newMax = Math.max(prevMax, similarity);
-        this._variables.set(varName, newMax);
-        sumMaxSimilarity += newMax;
-      }
+        let currentTurnMaxLoss = 0;
+        if (this._encounter.lossVectors) {
+          for (const vector of this._encounter.lossVectors) {
+            currentTurnMaxLoss = Math.max(currentTurnMaxLoss, cosineSimilarity(playerVector, vector));
+          }
+        }
 
-      const overallProximity = sumMaxSimilarity / this._encounter.targetVectors.length;
-      console.log(`Vector similarity overall for '${playerText}': ${overallProximity}`);
+        const winHistory = (this._variables.get('__winProximityTurnHistory') as number[]) || [];
+        winHistory.push(currentTurnMaxWin);
+        if (this._encounter.historyLimit !== null && winHistory.length > this._encounter.historyLimit) winHistory.shift();
+        this._variables.set('__winProximityTurnHistory', winHistory);
 
-      // Update variables so the UI can draw the proximity meter
-      this._variables.set('__vectorProximity', overallProximity);
+        const lossHistory = (this._variables.get('__lossProximityTurnHistory') as number[]) || [];
+        lossHistory.push(currentTurnMaxLoss);
+        if (this._encounter.historyLimit !== null && lossHistory.length > this._encounter.historyLimit) lossHistory.shift();
+        this._variables.set('__lossProximityTurnHistory', lossHistory);
 
-      if (overallProximity >= this._encounter.victoryThreshold) {
-        this._onNarrationMessage(`You correctly hit the target concepts! YOU WIN! (Proximity: ${overallProximity.toFixed(2)} >= ${this._encounter.victoryThreshold})`);
-        this._variables.set('__victory', true);
-        return; // Skip LLM generation, the encounter is over due to vector win
+        const avgWin = winHistory.reduce((a, b) => a + b, 0) / winHistory.length;
+        const avgLoss = lossHistory.reduce((a, b) => a + b, 0) / lossHistory.length;
+
+        // Tug-of-war logic based on the difference of the compound averages in the history window
+        const currentProximity = Math.max(0, Math.min(1, 0.50 + (avgWin * 0.5) - (avgLoss * 0.5)));
+        console.log(`Vector similarity tuple for '${playerText}': Win=${avgWin.toFixed(2)}, Loss=${avgLoss.toFixed(2)}, Proximity=${currentProximity.toFixed(2)}`);
+        this._variables.set('__vectorProximity', currentProximity);
+
+        if (this._encounter.targetThreshold !== null && currentProximity >= this._encounter.targetThreshold) {
+          this._onNarrationMessage(`That went well!...`);
+          this._variables.set('__victory', true);
+          return;
+        }
+
+        if (this._encounter.lossThreshold !== null && currentProximity <= this._encounter.lossThreshold) {
+          this._onNarrationMessage(`You feel like you could have done better...`);
+          this._variables.set('__loss', true);
+          return;
+        }
+      } else if (this._encounter.sceneType === SceneType.WIN_ONLY) {
+        // WIN_ONLY uses sum of absolute historical maximums per target
+        let sumMaxWinSimilarity = 0;
+        if (this._encounter.winVectors) {
+          for (let i = 0; i < this._encounter.winVectors.length; ++i) {
+            const targetVector = this._encounter.winVectors[i];
+            const similarity = cosineSimilarity(playerVector, targetVector);
+
+            const varName = `__winProximityHistory_${i}`;
+            const history = (this._variables.get(varName) as number[]) || [];
+            history.push(similarity);
+            if (this._encounter.historyLimit !== null && history.length > this._encounter.historyLimit) {
+              history.shift();
+            }
+            this._variables.set(varName, history);
+
+            const newMax = Math.max(...history);
+            sumMaxWinSimilarity += newMax;
+          }
+        }
+
+        const progWinMax = this._encounter.winVectors && this._encounter.winVectors.length > 0 ? sumMaxWinSimilarity / this._encounter.winVectors.length : 0.0;
+        const currentProximity = progWinMax;
+
+        console.log(`Vector similarity overall for '${playerText}': Win=${progWinMax.toFixed(2)}, Proximity=${currentProximity.toFixed(2)}`);
+        this._variables.set('__vectorProximity', currentProximity);
+
+        if (this._encounter.targetThreshold !== null && currentProximity >= this._encounter.targetThreshold) {
+          this._onNarrationMessage(`That went well!...`);
+          this._variables.set('__victory', true);
+          return;
+        }
       }
     }
 

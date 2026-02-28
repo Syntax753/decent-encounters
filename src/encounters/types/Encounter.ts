@@ -1,4 +1,4 @@
-import EncounterV0 from "../v0/types/Encounter";
+import EncounterV0, { SceneType } from "../v0/types/Encounter";
 
 /* Versioning strategy - major (first #) increments for breaking changes,
    minor increments for non-breaking changes, which would tend to be additive
@@ -7,4 +7,5 @@ import EncounterV0 from "../v0/types/Encounter";
 type Encounter = EncounterV0;
 export const LATEST_MAJOR_VERSION = 0;
 
+export { SceneType };
 export default Encounter;

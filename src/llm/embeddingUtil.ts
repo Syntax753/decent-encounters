@@ -14,7 +14,7 @@ let isInitializing = false;
  * Initializes the feature extraction pipeline.
  * We lazily load it only when an encounter needs it.
  */
-export async function initEmbeddings() {
+export async function initEmbeddings(onProgress?: (status: string, percentComplete: number) => void) {
     if (extractorPipeline) return;
     if (isInitializing) {
         // Wait until initialized if already in progress
@@ -30,15 +30,23 @@ export async function initEmbeddings() {
 
     isInitializing = true;
     console.log(`Initializing Huggingface Transformers: ${MODEL_ID}`);
+    if (onProgress) onProgress(`Resolving Huggingface Transformers: ${MODEL_ID}...`, 0);
 
     try {
         extractorPipeline = await pipeline('feature-extraction', MODEL_ID, {
             progress_callback: (x: any) => {
-                // We could bubble this up to the UI if we wanted a loading bar
-                console.log(`Transformers Model Load Progress: ${Math.round((x.loaded / x.total) * 100)}%`);
+                if (x.status === 'progress' && x.total) {
+                    const percent = x.loaded / x.total;
+                    if (onProgress) {
+                        onProgress(`Loading Embedder: ${x.name || 'model'}...`, percent);
+                    }
+                } else if (onProgress && x.status === 'initiate') {
+                    onProgress(`Initiating chunk: ${x.name || 'model'}...`, 0);
+                }
             }
         });
         console.log(`Transformers initialized successfully.`);
+        if (onProgress) onProgress(`Transformers initialized successfully.`, 1.0);
     } catch (err) {
         console.error("Failed to initialize Transformers embedding model:", err);
     } finally {

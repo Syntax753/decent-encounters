@@ -4,7 +4,7 @@
 * title=The Favourites Game
 * model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k
 * target_vector_text=chicken, blue, tennis
-* victory_threshold=0.95
+* target_threshold=0.95
 
 # Start
 

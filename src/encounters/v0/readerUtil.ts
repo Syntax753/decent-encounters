@@ -8,6 +8,7 @@ import CharacterTrigger from "./types/CharacterTrigger";
 import { parseVersion } from "../versionUtil";
 import { textToCode } from "@/spielCode/codeUtil";
 import Code from "@/spielCode/types/Code";
+import Encounter, { SceneType } from "./types/Encounter";
 import MessageSet from "./types/MessageSet";
 import Memory from "./types/Memory";
 
@@ -142,15 +143,29 @@ export function textToEncounter(text: string): Encounter {
   const title = generalSettings.title || 'Untitled Encounter';
   const model = generalSettings.model || 'default';
 
-  const targetVectorText = generalSettings.target_vector_text || null;
-  const victoryThresholdRaw = generalSettings.victory_threshold || null;
-  const victoryThreshold = victoryThresholdRaw ? parseFloat(victoryThresholdRaw) : null;
+  const winVectorText = generalSettings.target_vector_text || generalSettings.win_vector_text || null;
+  const lossVectorText = generalSettings.loss_vector_text || null;
+  const targetThresholdRaw = generalSettings.target_threshold || null;
+  const targetThreshold = targetThresholdRaw ? parseFloat(targetThresholdRaw) : null;
+  const lossThresholdRaw = generalSettings.loss_threshold || null;
+  const lossThreshold = lossThresholdRaw ? parseFloat(lossThresholdRaw) : null;
+  const historyLimitRaw = generalSettings.history_limit || null;
+  const historyLimit = historyLimitRaw ? parseInt(historyLimitRaw) : null;
 
   const startActions = _parseStartSection(sections.Start);
   const [instructionActions, characterTriggers] = _parseInstructionSection(sections.Instructions);
   const memories = _parseMemoriesSection(sections.Memories);
 
+  let sceneType = SceneType.UNKNOWN;
+  if (winVectorText && lossVectorText && targetThreshold !== null && lossThreshold !== null) {
+    sceneType = SceneType.WIN_LOSE;
+  } else if (winVectorText && targetThreshold !== null) {
+    sceneType = SceneType.WIN_ONLY;
+  }
+
   return {
-    version, title, model, startActions, instructionActions, characterTriggers, memories, targetVectorText, targetVectors: null, victoryThreshold, sourceText: text
+    version, title, model, startActions, instructionActions, characterTriggers, memories,
+    sceneType, winVectorText, winVectors: null, lossVectorText, lossVectors: null,
+    targetThreshold, lossThreshold, historyLimit, sourceText: text
   };
 }

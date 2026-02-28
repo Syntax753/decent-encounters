@@ -5,26 +5,26 @@ import DialogButton from "@/components/modalDialogs/DialogButton";
 import DialogFooter from "@/components/modalDialogs/DialogFooter";
 import Encounter from "@/encounters/types/Encounter";
 import styles from './EncounterConfigDialog.module.css';
-import { textToEncounter } from "@/encounters/v0/readerUtil";
+import { parseEncounterAsync } from "@/encounters/encounterUtil";
 
 type Props = {
-  encounter:Encounter,
-  isOpen:boolean,
-  onCancel:() => void,
-  onSave:(encounter:Encounter) => void
+  encounter: Encounter,
+  isOpen: boolean,
+  onCancel: () => void,
+  onSave: (encounter: Encounter) => void
 }
 
-function _onSaveClick(sourceText:string, onSave:(encounter:Encounter) => void, onSetLastError:(error:string) => void) {
+async function _onSaveClick(sourceText: string, onSave: (encounter: Encounter) => void, onSetLastError: (error: string) => void) {
   try {
-    const encounter = textToEncounter(sourceText);
+    const encounter = await parseEncounterAsync(sourceText);
     onSave(encounter);
-  } catch (e:any) {
+  } catch (e: any) {
     onSetLastError(`Error: ${e.message}`);
     return;
   }
 }
 
-function EncounterConfigDialog(props:Props) {
+function EncounterConfigDialog(props: Props) {
   const { onCancel, onSave, isOpen, encounter } = props;
   const [sourceText, setSourceText] = useState<string>(encounter?.sourceText || '');
   const [lastError, setLastError] = useState<string>('');

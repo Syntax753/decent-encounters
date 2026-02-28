@@ -7,7 +7,7 @@ import TopBar from '@/components/topBar/TopBar';
 import Chat from "@/components/chat/Chat";
 import { TextConsoleLine } from "@/components/textConsole/TextConsoleBuffer";
 import { getVariables, restartEncounter, submitPrompt, updateEncounter } from "./interactions/chat";
-import Encounter from "@/encounters/types/Encounter";
+import Encounter, { SceneType } from "@/encounters/types/Encounter";
 import ContentButton from "@/components/contentButton/ContentButton";
 import EncounterConfigDialog from "./dialogs/EncounterConfigDialog";
 import DiagnosticDialog from "./dialogs/DiagnosticDialog";
@@ -35,7 +35,7 @@ function HomeScreen() {
 
   const vars = getVariables();
   const proximityRaw = vars['__vectorProximity'];
-  const proximity = typeof proximityRaw === 'number' ? proximityRaw : 0;
+  const proximity = typeof proximityRaw === 'number' ? proximityRaw : (encounter.sceneType === SceneType.WIN_LOSE ? 0.5 : 0);
   const isVictory = vars['__victory'] === true;
 
   return (
@@ -43,24 +43,82 @@ function HomeScreen() {
       <TopBar onAboutClick={() => setModalDialogName(AboutDialog.name)} />
       <div className={styles.content}>
         <h1>{encounter.title}</h1>
-        {encounter.targetVectors && (
-          <div style={{ marginBottom: '16px', background: '#222', padding: '8px', borderRadius: '4px', border: '1px solid #444' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontSize: '12px', color: '#999' }}>Instinct</span>
-              <span style={{ fontSize: '12px', color: isVictory ? '#4caf50' : '#aaa' }}>
-                {Math.round(proximity * 100)}% {encounter.victoryThreshold ? `/ ${Math.round(encounter.victoryThreshold * 100)}%` : ''}
-              </span>
+        <div className={styles.lowerArea}>
+          {(encounter.sceneType === SceneType.WIN_LOSE || encounter.sceneType === SceneType.WIN_ONLY) && (
+            <div className={styles.proximityContainer}>
+              <div style={{ position: 'relative', height: '24px', background: '#111', borderRadius: '4px', overflow: 'hidden' }} title={`Instinct: ${proximity.toFixed(2)}`}>
+
+                {/* Title */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                  color: '#fff', fontSize: '13px', fontWeight: 'bold', zIndex: 2, textShadow: '1px 1px 2px #000', pointerEvents: 'none'
+                }}>
+                  Instinct
+                </div>
+
+                {encounter.sceneType === SceneType.WIN_LOSE ? (
+                  <>
+                    {/* Green fill from the left */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0, bottom: 0, left: 0,
+                      width: `${Math.max(0, Math.min(100, proximity * 100))}%`,
+                      background: '#4caf50',
+                      transition: 'width 0.3s ease-in-out'
+                    }} />
+                    {/* Red fill from the right */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0, bottom: 0, right: 0,
+                      width: `${Math.max(0, Math.min(100, (1 - proximity) * 100))}%`,
+                      background: '#f44336',
+                      transition: 'width 0.3s ease-in-out'
+                    }} />
+                  </>
+                ) : (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0, bottom: 0, left: 0,
+                    width: `${Math.max(0, Math.min(100, proximity * 100))}%`,
+                    background: isVictory ? '#4caf50' : '#2196f3',
+                    transition: 'width 0.3s ease-in-out'
+                  }} />
+                )}
+
+                {encounter.sceneType === SceneType.WIN_LOSE && encounter.lossThreshold !== null && (
+                  <>
+                    <div style={{
+                      position: 'absolute',
+                      top: 0, bottom: 0,
+                      left: `calc(${encounter.lossThreshold * 100}% - 1px)`,
+                      width: '2px',
+                      background: 'rgba(255, 215, 0, 0.5)'
+                    }} />
+                    <div style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '8px', color: '#fff', fontSize: '12px', zIndex: 1, textShadow: '1px 1px 2px #000' }}>
+                      Loss: {Math.round(encounter.lossThreshold * 100)}%
+                    </div>
+                  </>
+                )}
+
+                {encounter.targetThreshold !== null && (
+                  <>
+                    <div style={{
+                      position: 'absolute',
+                      top: 0, bottom: 0,
+                      left: `calc(${encounter.targetThreshold * 100}% - 1px)`,
+                      width: '2px',
+                      background: 'rgba(255, 215, 0, 0.5)'
+                    }} />
+                    <div style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: '8px', color: '#fff', fontSize: '12px', zIndex: 1, textShadow: '1px 1px 2px #000' }}>
+                      Win: {Math.round(encounter.targetThreshold * 100)}%
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-            <div style={{ height: '8px', background: '#111', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{
-                height: '100%',
-                width: `${Math.max(0, Math.min(100, proximity * 100))}%`,
-                background: isVictory ? '#4caf50' : '#2196f3',
-                transition: 'width 0.3s ease-in-out'
-              }} />
-            </div>
-          </div>
-        )}
+          )}
+        </div>
         <Chat className={styles.chat} lines={lines} onChatInput={(prompt) => submitPrompt(prompt)} />
       </div>
       <div className={styles.encounterActions}>
