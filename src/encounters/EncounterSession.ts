@@ -226,6 +226,7 @@ class EncounterSession {
 
   async start(encounter: Encounter) {
     this._encounter = encounter;
+    this._variables = new VariableManager();
     this._variables.set('instinct', 50);
     const { reprocess } = this._handleActions(this._encounter.startActions);
     this._llmMessages.chatHistory = [];

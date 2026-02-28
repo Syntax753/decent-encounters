@@ -12,7 +12,7 @@
 
 * history_limit=5
 * weighted_proximity=true
-* switch_type=reverse
+* switch_type=reset
 * base_instinct=fixed
 
 # Start
