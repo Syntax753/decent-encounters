@@ -258,7 +258,7 @@ class EncounterSession {
     if (skipResponseHandling) return;
 
     // Evaluate Vector DB Proximity for multiple dimensions
-    if (this._encounter.sceneType !== SceneType.UNKNOWN) {
+    if (this._encounter.sceneType !== SceneType.DEFAULT) {
       const { getEmbedding, cosineSimilarity } = await import("@/llm/embeddingUtil");
       const playerVector = await getEmbedding(playerText);
 

@@ -5,7 +5,7 @@ import Memory from "./Memory";
 export enum SceneType {
   WIN_ONLY = 'WIN_ONLY',
   WIN_LOSE = 'WIN_LOSE',
-  UNKNOWN = 'UNKNOWN'
+  DEFAULT = 'DEFAULT'
 }
 
 type EncounterV0 = {

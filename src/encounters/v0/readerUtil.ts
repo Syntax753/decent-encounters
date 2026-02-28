@@ -162,11 +162,15 @@ export function textToEncounter(text: string): Encounter {
   const [instructionActions, characterTriggers] = _parseInstructionSection(sections.Instructions);
   const memories = _parseMemoriesSection(sections.Memories);
 
-  let sceneType = SceneType.UNKNOWN;
+  let sceneType = SceneType.DEFAULT;
   if (winVectorText && lossVectorText && targetThreshold !== null && lossThreshold !== null) {
     sceneType = SceneType.WIN_LOSE;
   } else if (winVectorText && targetThreshold !== null) {
     sceneType = SceneType.WIN_ONLY;
+  } else {
+    if (weightedProximityRaw) console.warn(`weighted_proximity is ignored because no vectors are defined!`);
+    if (switchTypeRaw) console.warn(`switch_type is ignored because no vectors are defined!`);
+    if (baseInstinctRaw) console.warn(`base_instinct is ignored because no vectors are defined!`);
   }
 
   return {
