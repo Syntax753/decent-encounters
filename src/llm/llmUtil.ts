@@ -16,8 +16,10 @@ import LLMConnectionType from "./types/LLMConnectionType";
 import LLMMessages from "./types/LLMMessages";
 import StatusUpdateCallback from "./types/StatusUpdateCallback";
 import { webLlmConnect, webLlmGenerate } from "./webLlmUtil";
+import { noneLlmConnect, noneLlmGenerate } from "./noneLlmUtil";
 
 const UNSPECIFIED_MODEL_ID = 'UNSPECIFIED';
+const NONE_MODEL_ID = 'None';
 
 let theConnection:LLMConnection = {
   modelId: UNSPECIFIED_MODEL_ID,
@@ -59,7 +61,9 @@ export async function connect(modelId:string, onStatusUpdate:StatusUpdateCallbac
   theConnection.state = LLMConnectionState.INITIALIZING;
   theConnection.modelId = modelId;
   const startLoadTime = Date.now();
-  if (!await webLlmConnect(theConnection.modelId, theConnection, onStatusUpdate)) {
+  if (modelId === NONE_MODEL_ID) {
+    await noneLlmConnect(modelId, theConnection, onStatusUpdate);
+  } else if (!await webLlmConnect(theConnection.modelId, theConnection, onStatusUpdate)) {
     updateModelDeviceLoadHistory(theConnection.modelId, false);
     _clearConnectionAndThrow('Failed to connect to WebLLM.');
   }
@@ -81,6 +85,7 @@ export async function generate(messages:LLMMessages, onStatusUpdate:StatusUpdate
   let requestTime = Date.now();
   switch(theConnection.connectionType) {
     case LLMConnectionType.WEBLLM: message = await webLlmGenerate(theConnection, messages, _captureFirstResponse); break;
+    case LLMConnectionType.NONE: message = await noneLlmGenerate(messages, _captureFirstResponse); break;
     default: throw Error('Unexpected');
   }
   updateModelDevicePerformanceHistory(theConnection.modelId, requestTime, firstResponseTime, Date.now(), _inputCharCount(messages), message.length);
