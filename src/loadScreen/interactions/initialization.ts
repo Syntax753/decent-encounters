@@ -1,5 +1,7 @@
-import { connect } from "@/llm/llmUtil.ts";
 import { findBestModel, ModelDeviceProblemsDialog, predictModelDeviceProblems } from "decent-portal";
+
+import { connect } from "@/llm/llmUtil.ts";
+import { initEmbeddings } from "@/transformersJs/embeddingUtil";
 
 let isInitialized = false;
 let isInitializing = false;
@@ -40,6 +42,8 @@ export async function startLoadingModel(modelId:string, setPercentComplete:Funct
       setPercentComplete(percentComplete);
       setCurrenTask(status);
     }
+
+    await initEmbeddings(_onStatusUpdate);
 
     await connect(modelId, _onStatusUpdate);
     isInitialized = true;
