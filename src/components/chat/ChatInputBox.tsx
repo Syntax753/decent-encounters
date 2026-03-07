@@ -6,11 +6,13 @@ import {useState, useEffect} from "react";
 type Props = {
   onSubmit:(text:string) => void,
   disabled?:boolean,
-  recentPrompts:string[]
+  recentPrompts:string[],
+  isSpeechEnabled:boolean,
+  onToggleSpeech:() => void
 }
 
 function ChatInputBox(props:Props) {
-  const { onSubmit, disabled, recentPrompts } = props;
+  const { onSubmit, disabled, recentPrompts, isSpeechEnabled, onToggleSpeech } = props;
   const [text, setText] = useState<string>('');
   const [recentPromptI, setRecentPromptI] = useState<number>(recentPrompts.length);
 
@@ -49,11 +51,13 @@ function ChatInputBox(props:Props) {
     else if (e.key === 'ArrowDown') _onSelectDown();
   }
   
+  const speechButtonText = isSpeechEnabled ? 'Disable Speech' : 'Enable Speech';
   return (
     <div className={styles.container}>
       <input className={styles.textInput} type="text" placeholder={'Say something...'} value={text} 
         onChange={(e) => setText(e.target.value)} onKeyDown={_onKeyDown} disabled={disabled}/>
       <ContentButton onClick={_onSubmit} text="Submit" disabled={disabled}/>
+      <ContentButton onClick={onToggleSpeech} text={speechButtonText} disabled={disabled}/>
     </div>
   );
 }

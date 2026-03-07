@@ -12,6 +12,7 @@ import { VariableCollection } from "@/spielCode/VariableManager";
 import { bindEncounterFunctions } from "./encounterFunctions";
 import { appendRecentPrompt } from "@/persistence/recentPrompts";
 import { setLastEncounterUrl } from "@/persistence/lastEncounter";
+import { connectSpeechToEncounterSession } from "@/speech/speechUtil";
 
 const MAX_LINE_COUNT = 100;
 
@@ -82,6 +83,7 @@ export function initChat(encounter:Encounter, setLines:Function) {
   theSession.bindFunction((t:string) => _addNarrationLine(t, setLines), 'onNarrationMessage');
   theSession.bindFunction((t:string) => _addPlayerLine(t, setLines), 'onPlayerMessage');
   bindEncounterFunctions(theSession);
+  connectSpeechToEncounterSession(theSession);
   _initForEncounter(encounter);
 }
 

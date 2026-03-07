@@ -15,6 +15,7 @@ import WrongModelDialog from "./dialogs/WrongModelDialog";
 import { getRecentPrompts } from "@/persistence/recentPrompts";
 import EncounterList from "@/encounters/types/EncounterList";
 import EncounterSelector from "./EncounterSelector";
+import { isSpeechEnabled as getIsSpeechEnabled, toggleSpeech } from "@/speech/speechUtil";
 
 function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -23,6 +24,7 @@ function HomeScreen() {
   const [encounterList, setEncounterList] = useState<EncounterList|null>(null);
   const [modalDialogName, setModalDialogName] = useState<string|null>(null);
   const [recentPrompts, setRecentPrompts] = useState<string[]>([]);
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState<boolean>(getIsSpeechEnabled());
   
   useEffect(() => {
     if (isLoading) return;
@@ -46,7 +48,13 @@ function HomeScreen() {
       <div className={styles.content}>
         <EncounterSelector encounterList={encounterList} onSelect={(url) => startFromUrl(url, setLines, setEncounter)} />
         <h1>{encounter.title}</h1>
-        <Chat className={styles.chat} lines={lines} onChatInput={(prompt) => submitPrompt(prompt, setRecentPrompts)} recentPrompts={recentPrompts} />
+        <Chat 
+          className={styles.chat} lines={lines} 
+          onChatInput={(prompt) => submitPrompt(prompt, setRecentPrompts)} 
+          recentPrompts={recentPrompts} 
+          isSpeechEnabled={isSpeechEnabled}
+          onToggleSpeech={() => { toggleSpeech(); setIsSpeechEnabled(getIsSpeechEnabled()); }}
+        />
       </div>
       <div className={styles.encounterActions}>
         <h1>Encounter</h1>

@@ -2,6 +2,7 @@ import { findBestModel, ModelDeviceProblemsDialog, predictModelDeviceProblems } 
 
 import { connect } from "@/llm/llmUtil.ts";
 import { initEmbeddings } from "@/transformersJs/embeddingUtil";
+import { initSpeech } from "@/speech/speechUtil";
 
 let isInitialized = false;
 let isInitializing = false;
@@ -45,6 +46,7 @@ export async function startLoadingModel(modelId:string, setPercentComplete:Funct
     }
 
     await initEmbeddings(_onStatusUpdate);
+    await initSpeech(_onStatusUpdate);
 
     await connect(modelId, _onStatusUpdate);
     isInitialized = true;

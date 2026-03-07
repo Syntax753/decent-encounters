@@ -8,16 +8,21 @@ type Props = {
   lines:TextConsoleLine[],
   onChatInput:(text:string) => void,
   recentPrompts:string[],
+  isSpeechEnabled:boolean,
+  onToggleSpeech:() => void,
   disabled?:boolean
 }
 
 function Chat(props:Props) {
-  const {className, lines, onChatInput, disabled, recentPrompts} = props;
+  const {className, lines, onChatInput, disabled, recentPrompts, isSpeechEnabled, onToggleSpeech } = props;
 
   return (
     <div className={className}>
       <ChatHistory lines={lines} />
-      <ChatInputBox onSubmit={onChatInput} disabled={disabled} recentPrompts={recentPrompts} />
+      <ChatInputBox 
+        onSubmit={onChatInput} disabled={disabled} recentPrompts={recentPrompts} 
+        isSpeechEnabled={isSpeechEnabled} onToggleSpeech={onToggleSpeech} 
+      />
     </div>
   );
 }
