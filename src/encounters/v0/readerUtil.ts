@@ -11,6 +11,7 @@ import Code from "@/spielCode/types/Code";
 import MessageSet from "./types/MessageSet";
 import Memory from "./types/Memory";
 import EncounterListV0 from "./types/EncounterList";
+import AudienceMember from "./types/AudienceMember";
 
 function _stripEnclosers(text:string, enclosingText:string):string {
   text = text.trim();
@@ -135,6 +136,17 @@ function _parseMemoriesSection(memoriesSection?:string):Memory[] {
   return memories;
 }
 
+function _parseAudienceSection(audienceSection:string):AudienceMember[] {
+  const audienceCharacters = parseSections(audienceSection, 2);
+  const names = Object.keys(audienceCharacters);
+  
+  return names.map(name => {
+    const characterVars = parseNameValueLines(audienceCharacters[name]);
+    const likes = characterVars.likes.split('|').map(keyword => keyword.trim()).filter(keyword => keyword !== '');
+    return { name, likes };
+  });
+}
+
 export function textToEncounter(text:string):Encounter {
   const version = parseEncounterVersion(text); // Throws if missing/invalid.
   const sections = parseSections(text);
@@ -142,12 +154,13 @@ export function textToEncounter(text:string):Encounter {
   const generalSettings = sections.General ? parseNameValueLines(sections.General) : {}
   const title = generalSettings.title || 'Untitled Encounter';
   const model = generalSettings.model || 'default';
+  const audience:AudienceMember[] = sections.Audience ? _parseAudienceSection(sections.Audience) : [];
 
   const startActions = _parseStartSection(sections.Start);
   const [instructionActions, characterTriggers] = _parseInstructionSection(sections.Instructions);
   const memories = _parseMemoriesSection(sections.Memories);
 
-  return { version, title, model, startActions, instructionActions, characterTriggers, memories };
+  return { version, title, model, startActions, instructionActions, characterTriggers, memories, audience };
 }
 
 export function textToEncounterList(text:string, lastLoadedEncounterUrl:string|null):EncounterListV0 {
