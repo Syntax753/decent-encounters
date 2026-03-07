@@ -15,7 +15,8 @@ import WrongModelDialog from "./dialogs/WrongModelDialog";
 import { getRecentPrompts } from "@/persistence/recentPrompts";
 import EncounterList from "@/encounters/types/EncounterList";
 import EncounterSelector from "./EncounterSelector";
-import { isSpeechEnabled as getIsSpeechEnabled, toggleSpeech } from "@/speech/speechUtil";
+import { isSpeechAvailable, isSpeechEnabled as getIsSpeechEnabled, initSpeech, toggleSpeech } from "@/speech/speechUtil";
+import MicrophonePermissionDialog from "@/loadScreen/MicrophonePermissionDialog";
 
 function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -53,7 +54,10 @@ function HomeScreen() {
           onChatInput={(prompt) => submitPrompt(prompt, setRecentPrompts)} 
           recentPrompts={recentPrompts} 
           isSpeechEnabled={isSpeechEnabled}
-          onToggleSpeech={() => { toggleSpeech(); setIsSpeechEnabled(getIsSpeechEnabled()); }}
+          onToggleSpeech={() => {
+            if (!isSpeechAvailable()) { setModalDialogName('MicrophonePermissionDialog'); return; }
+            toggleSpeech(); setIsSpeechEnabled(getIsSpeechEnabled());
+          }}
         />
       </div>
       <div className={styles.encounterActions}>
@@ -72,6 +76,16 @@ function HomeScreen() {
         expectedModelId={encounter ? encounter.model : 'unknown'}
         isOpen={modalDialogName === WrongModelDialog.name}
         onClose={() => setModalDialogName(null)}
+      />
+      <MicrophonePermissionDialog
+        isOpen={modalDialogName === 'MicrophonePermissionDialog'}
+        onApprove={async () => {
+          setModalDialogName(null);
+          await initSpeech(() => {/* no-op */});
+          toggleSpeech();
+          setIsSpeechEnabled(getIsSpeechEnabled());
+        }}
+        onSkip={() => setModalDialogName(null)}
       />
     </div>
   );

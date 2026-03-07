@@ -1,6 +1,6 @@
 import EncounterSession from "@/encounters/EncounterSession";
 import StatusUpdateCallback from "@/llm/types/StatusUpdateCallback";
-import { Recognizer, setModelsBaseUrl } from "sl-web-speech";
+import type Recognizer from "sl-web-speech/dist/speech/Recognizer";
 
 let theRecognizer:Recognizer|null = null;
 let theEncounterSession:EncounterSession|null = null;
@@ -15,9 +15,11 @@ function _onFinal(message:string) {
 
 export async function initSpeech(onStatusUpdate:StatusUpdateCallback):Promise<boolean> {
   if (theInitSpeechPromise) return theInitSpeechPromise;
-  theInitSpeechPromise = new Promise<boolean>((resolve) => {
+  theInitSpeechPromise = new Promise<boolean>(async (resolve) => {
 
     onStatusUpdate('Initializing speech recognition...', 0);
+
+    const { Recognizer, setModelsBaseUrl } = await import("sl-web-speech");
 
     function _onReady() {
       if (!theRecognizer) throw Error('Unexpected');
@@ -38,12 +40,16 @@ export async function initSpeech(onStatusUpdate:StatusUpdateCallback):Promise<bo
   return theInitSpeechPromise;
 }
 
+export function isSpeechAvailable():boolean {
+  return theRecognizer !== null;
+}
+
 export function isSpeechEnabled():boolean {
   return theIsSpeechEnabled;
 }
 
 export function toggleSpeech() {
-  if (!theRecognizer) throw Error('Unexpected');
+  if (!theRecognizer) return;
   if (theIsSpeechEnabled) theRecognizer.mute();
   else theRecognizer.unmute();
   theIsSpeechEnabled = !theIsSpeechEnabled;
