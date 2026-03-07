@@ -21,7 +21,7 @@ function LoadScreen(props:Props) {
   const [currentTask, setCurrentTask] = useState('Loading');
   const [problems, setProblems] = useState<ModelDeviceProblem[]|null>(null);
   const {onComplete} = props;
-  
+
   useEffect(() => {
     if (!isReadyToLoad) {
       init(setModelId, setProblems, setModalDialogName).then(setIsReadyToLoad);
@@ -50,11 +50,11 @@ function LoadScreen(props:Props) {
         {statusContent}
       </div>
 
-      <ModelDeviceProblemsDialog 
-        isOpen={modalDialogName === ModelDeviceProblemsDialog.name} 
+      <ModelDeviceProblemsDialog
+        isOpen={modalDialogName === ModelDeviceProblemsDialog.name}
         modelId={modelId}
-        problems={problems} 
-        onConfirm={() => {setModalDialogName(null); setIsReadyToLoad(true); }} 
+        problems={problems}
+        onConfirm={() => {setModalDialogName(null); setIsReadyToLoad(true); }}
         onCancel={() => {setModalDialogName(null); setWasLoadCancelled(true); }}
       />
       <AboutDialog

@@ -38,12 +38,16 @@ export async function initSpeech(onStatusUpdate:StatusUpdateCallback):Promise<bo
   return theInitSpeechPromise;
 }
 
+export function isSpeechAvailable():boolean {
+  return theRecognizer !== null;
+}
+
 export function isSpeechEnabled():boolean {
   return theIsSpeechEnabled;
 }
 
 export function toggleSpeech() {
-  if (!theRecognizer) throw Error('Unexpected');
+  if (!theRecognizer) return;
   if (theIsSpeechEnabled) theRecognizer.mute();
   else theRecognizer.unmute();
   theIsSpeechEnabled = !theIsSpeechEnabled;
