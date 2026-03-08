@@ -63,11 +63,13 @@ export async function connect(modelId:string, onStatusUpdate:StatusUpdateCallbac
   const startLoadTime = Date.now();
   if (modelId === NONE_MODEL_ID) {
     await noneLlmConnect(modelId, theConnection, onStatusUpdate);
-  } else if (!await webLlmConnect(theConnection.modelId, theConnection, onStatusUpdate)) {
-    updateModelDeviceLoadHistory(theConnection.modelId, false);
-    _clearConnectionAndThrow('Failed to connect to WebLLM.');
+  } else {
+    if (!await webLlmConnect(theConnection.modelId, theConnection, onStatusUpdate)) {
+      updateModelDeviceLoadHistory(theConnection.modelId, false);
+      _clearConnectionAndThrow('Failed to connect to WebLLM.');
+    }
+    updateModelDeviceLoadHistory(theConnection.modelId, true, Date.now() - startLoadTime);
   }
-  updateModelDeviceLoadHistory(theConnection.modelId, true, Date.now() - startLoadTime);
   theConnection.state = LLMConnectionState.READY;
 }
 
