@@ -11,3 +11,5 @@ _And there in front of you - The Oracle beckons_
 # Instructions
 
 **Answer the player the best you can**
+**Only answer the last question asked**
+**Do not add any additional information**

@@ -7,14 +7,22 @@ import { createChatHistory } from "./messageUtil";
 import { FilesetResolver, LlmInference } from "@mediapipe/tasks-genai";
 
 /**
- * Mapping of model IDs (from app-metadata.json) to their actual download URLs.
- * Add new entries here as more LiteRT-LM models become available.
+ * LiteRT-LM models are for embedded runtimes but only the -Web models are available for browsers
+ * These are just tuned versions of the foundation models
+ * 
+ * The foundation models can be run on mobile devices
+ * 
+ * LiteRT-LM overview:
+ * https://github.com/google-ai-edge/LiteRT-LM/blob/main/README.md
+ * 
+ * Inference guide for web:
+ * https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/web_js
  */
 const MEDIAPIPE_MODEL_URLS: Record<string, string> = {
     'Gemma 3n E2B':
-        '/litert-models/gemma-3n-E2B-it-int4-Web.litertlm',
+        '/litert-models/gemma-3n-E2B-it-int4-Web.litertlm', // 2.9GB
     'Gemma 3n E4B':
-        '/litert-models/gemma-3n-E4B-it-int4-Web.litertlm'
+        '/litert-models/gemma-3n-E4B-it-int4-Web.litertlm' // 4.2GB
 };
 
 function _resolveModelUrl(modelId: string): string {
@@ -41,8 +49,9 @@ export async function mediapipeConnect(modelId: string, connection: LLMConnectio
                 modelAssetPath: modelUrl
             },
             // some default settings
-            maxTokens: 512,
-            topK: 40,
+            // https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/web_js#configuration-options
+            maxTokens: 8192,
+            topK: 128,
             temperature: 0.2,
             randomSeed: 0
         });
