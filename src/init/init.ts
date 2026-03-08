@@ -15,6 +15,12 @@ export async function initApp() {
     configurable: true // Allows cleanup or recreation if needed
   });
 
+  Object.defineProperty(Object.prototype, 'gemma-3n-E2B-it-int4-Web.litertlm', {
+    value: { modelId: 'gemma-3n-E2B-it-int4-Web.litertlm', vramRequiredMb: 8192 },
+    enumerable: true,
+    configurable: true
+  });
+
   await initAppMetaData(); // Useful to have app metadata ready before the app starts because DecentBar needs it.
 
   // Switch the supported models based on the inference family.
