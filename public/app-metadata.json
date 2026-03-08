@@ -33,6 +33,10 @@
     {
       "id": "gemma-3n-e2b-it-int4-web.litertlm",
       "appBehaviorSummary": "Gemma 3n E2B (3GB) - Larger, more capable model"
+    },
+    {
+      "id": "gemma-3n-e4b-it-int4-web.litertlm",
+      "appBehaviorSummary": "Gemma 3n E4B (4B params) - Most capable LiteRT-LM model"
     }
   ],
   "supportedModels": []

@@ -21,6 +21,12 @@ export async function initApp() {
     configurable: true
   });
 
+  Object.defineProperty(Object.prototype, 'gemma-3n-e4b-it-int4-web.litertlm', {
+    value: { modelId: 'gemma-3n-e4b-it-int4-web.litertlm', vramRequiredMb: 12288 },
+    enumerable: false, // CRITICAL: Must be false to prevent Transformers.js pipeline initialization crash!
+    configurable: true
+  });
+
   await initAppMetaData(); // Useful to have app metadata ready before the app starts because DecentBar needs it.
 
   // Switch the supported models based on the inference family.
@@ -34,7 +40,7 @@ export async function initApp() {
 
   if (family === 'mediapipe' && metadata.supportedModelsMediapipe) {
     metadata.supportedModels = metadata.supportedModelsMediapipe;
-  } else if (family === 'webllm' && metadata.supportedModelsWebLlm) {
-    metadata.supportedModels = metadata.supportedModelsWebLlm;
+  } else if (family === 'webllm' && metadata.supportedModelsWebLLM) {
+    metadata.supportedModels = metadata.supportedModelsWebLLM;
   }
 }
