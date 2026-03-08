@@ -11,9 +11,9 @@ import { FilesetResolver, LlmInference } from "@mediapipe/tasks-genai";
  * Add new entries here as more LiteRT-LM models become available.
  */
 const MEDIAPIPE_MODEL_URLS: Record<string, string> = {
-    'gemma-3n-e2b-it-int4-web.litertlm':
+    'Gemma 3n E2B':
         '/litert-models/gemma-3n-E2B-it-int4-Web.litertlm',
-    'gemma-3n-e4b-it-int4-web.litertlm':
+    'Gemma 3n E4B':
         '/litert-models/gemma-3n-E4B-it-int4-Web.litertlm'
 };
 

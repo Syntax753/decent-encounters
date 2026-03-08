@@ -15,14 +15,14 @@ export async function initApp() {
     configurable: true // Allows cleanup or recreation if needed
   });
 
-  Object.defineProperty(Object.prototype, 'gemma-3n-e2b-it-int4-web.litertlm', {
-    value: { modelId: 'gemma-3n-e2b-it-int4-web.litertlm', vramRequiredMb: 8192 },
+  Object.defineProperty(Object.prototype, 'Gemma 3n E2B', {
+    value: { modelId: 'Gemma 3n E2B', vramRequiredMb: 8192 },
     enumerable: false, // CRITICAL: Must be false to prevent Transformers.js pipeline initialization crash!
     configurable: true
   });
 
-  Object.defineProperty(Object.prototype, 'gemma-3n-e4b-it-int4-web.litertlm', {
-    value: { modelId: 'gemma-3n-e4b-it-int4-web.litertlm', vramRequiredMb: 8192 },
+  Object.defineProperty(Object.prototype, 'Gemma 3n E4B', {
+    value: { modelId: 'Gemma 3n E4B', vramRequiredMb: 8192 },
     enumerable: false, // CRITICAL: Must be false to prevent Transformers.js pipeline initialization crash!
     configurable: true
   });
