@@ -39,6 +39,38 @@ export function stripTriggerCodes(responseText: string): string {
 }
 
 import { getEmbedding } from "@/llm/embeddingUtil";
+import { generate } from "@/llm/llmUtil";
+import LLMMessages from "@/llm/types/LLMMessages";
+
+async function _generateVectorKeywords(encounter: Encounter): Promise<string> {
+  // Build a compact representation of the character from Start + Instructions
+  const sourceText = encounter.sourceText || '';
+  const startMatch = sourceText.match(/^# Start\s*([\s\S]*?)(?=\n#|$)/m);
+  const instructionsMatch = sourceText.match(/^# Instructions\s*([\s\S]*?)(?=\n#|$)/m);
+  const startText = startMatch ? startMatch[1].trim() : '';
+  const instructionsText = instructionsMatch ? instructionsMatch[1].trim() : '';
+
+  const characterContext = [
+    startText && `Scene setup:\n${startText}`,
+    instructionsText && `Character instructions:\n${instructionsText}`
+  ].filter(Boolean).join('\n\n');
+
+  const messages: LLMMessages = {
+    systemMessage: `You are a helpful assistant that generates vocabulary lists for semantic similarity matching.`,
+    chatHistory: [
+      {
+        role: 'user',
+        content: `Given this game character description, generate a comma-separated list of 15–25 short keywords or phrases that a player would use when positively engaging with this character (e.g. praising them, showing understanding, using themes relevant to their identity). Only output the comma-separated list, nothing else.\n\n${characterContext}`
+      }
+    ]
+  };
+
+  console.log('[genVector] Calling LLM to generate keywords for:', encounter.title);
+  const result = await generate(messages, () => { });
+  const keywords = result.replace(/[\n\r]+/g, ' ').trim();
+  console.log('[genVector] Generated keywords:', keywords);
+  return keywords;
+}
 
 export async function parseEncounterAsync(text: string): Promise<Encounter> {
   const version = parseVersion(text);
@@ -47,7 +79,12 @@ export async function parseEncounterAsync(text: string): Promise<Encounter> {
   const encounter = textToEncounter(text);
 
   if (encounter.winVectorText) {
-    const dimensions = encounter.winVectorText.split(',').map(d => d.trim()).filter(d => d.length > 0);
+    let winVectorText = encounter.winVectorText.trim();
+    if (winVectorText === '@gen') {
+      winVectorText = await _generateVectorKeywords(encounter);
+      encounter.winVectorText = winVectorText;
+    }
+    const dimensions = winVectorText.split(',').map(d => d.trim()).filter(d => d.length > 0);
     encounter.winVectors = await Promise.all(dimensions.map(d => getEmbedding(d)));
   }
 

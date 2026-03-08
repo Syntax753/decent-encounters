@@ -240,9 +240,8 @@ class EncounterSession {
     const encounter = await loadEncounter(encounterUrl);
     if (this._onEncounterLoaded !== null) {
       this._onEncounterLoaded(encounter);
-    } else {
-      await this.start(encounter);
     }
+    await this.start(encounter);
   }
 
   async restart() {
@@ -417,7 +416,23 @@ class EncounterSession {
         const currentProximity = progWinMax;
         const instinct = Math.max(0, Math.min(100, Math.round(currentProximity * 100)));
 
-        console.log(`Vector similarity overall for '${playerText}': Win=${progWinMax.toFixed(2)}, Proximity=${currentProximity.toFixed(2)}\nInstinct: ${instinct}`);
+        let winOnlyDebug = `\n--- WIN_ONLY Instinct Scoring Debug ---\n`;
+        winOnlyDebug += `Player Text : "${playerText}"\n`;
+        if (this._encounter.winVectors) {
+          for (let i = 0; i < this._encounter.winVectors.length; ++i) {
+            const varName = `__winProximityHistory_${i}`;
+            const history = (this._variables.get(varName) as number[]) || [];
+            const currentSim = history.length > 0 ? history[history.length - 1] : 0;
+            const maxSim = history.length > 0 ? Math.max(...history) : 0;
+            const dimLabel = this._encounter.winVectorText
+              ? this._encounter.winVectorText.split(',').map((d: string) => d.trim())[i] ?? `Vector ${i}`
+              : `Vector ${i}`;
+            winOnlyDebug += `  [${dimLabel}] Current: ${currentSim.toFixed(3)}, Max: ${maxSim.toFixed(3)}\n`;
+          }
+        }
+        winOnlyDebug += `Win Avg (currentProximity): ${currentProximity.toFixed(3)}, Instinct: ${instinct}\n`;
+        winOnlyDebug += `-------------------------------`;
+        console.log(winOnlyDebug);
         this._variables.set('__vectorProximity', currentProximity);
         this._variables.set('instinct', instinct);
 

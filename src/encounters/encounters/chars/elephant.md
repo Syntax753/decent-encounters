@@ -2,7 +2,7 @@
 # General
 * title=The Elephant
 * model=Llama-3.1-8B-Instruct-q4f16_1-MLC-1k
-* target_vector=jumbo,peanut,trunk,safari
+* target_vector=@gen
 * loss_vector=mouse,scary,loud
 * target_threshold=0.8
 * loss_threshold=0.2

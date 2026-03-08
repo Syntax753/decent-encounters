@@ -57,7 +57,7 @@ function ChatInputBox(props: Props) {
           setText(e.target.value);
           setHistoryIndex(-1); // Reset history index on manual edit
         }}
-        onKeyDown={_onKeyDown} disabled={disabled} />
+        onKeyDown={_onKeyDown} disabled={disabled} autoFocus />
       <ContentButton onClick={_onSubmit} text="Submit" disabled={disabled} />
     </div>
   );

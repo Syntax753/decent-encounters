@@ -5,7 +5,8 @@ env.allowLocalModels = false;
 env.useBrowserCache = true;
 
 // Use a lightweight embedding model
-const MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
+// const MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
+const MODEL_ID = 'Xenova/bge-small-en-v1.5';
 
 let extractorPipeline: any = null;
 let isInitializing = false;
@@ -59,10 +60,17 @@ export async function initEmbeddings(onProgress?: (status: string, percentComple
  */
 export async function getEmbedding(text: string): Promise<number[]> {
     if (!extractorPipeline) await initEmbeddings();
-    if (!extractorPipeline) throw new Error("Embedding pipeline not initialized.");
 
-    const output = await extractorPipeline(text, { pooling: 'mean', normalize: true });
-    // output.data is a Float32Array
+    // BGE models perform best with a specific prompt prefix for retrieval
+    // Use this prefix only for the query/input sentence you are searching with
+    const instruction = "represent this sentence for finding relevant matches: ";
+    const input = `${instruction}${text}`;
+
+    const output = await extractorPipeline(input, {
+        pooling: 'mean',
+        normalize: true
+    });
+
     return Array.from(output.data);
 }
 
