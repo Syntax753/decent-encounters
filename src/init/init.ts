@@ -22,7 +22,7 @@ export async function initApp() {
   });
 
   Object.defineProperty(Object.prototype, 'gemma-3n-e4b-it-int4-web.litertlm', {
-    value: { modelId: 'gemma-3n-e4b-it-int4-web.litertlm', vramRequiredMb: 12288 },
+    value: { modelId: 'gemma-3n-e4b-it-int4-web.litertlm', vramRequiredMb: 8192 },
     enumerable: false, // CRITICAL: Must be false to prevent Transformers.js pipeline initialization crash!
     configurable: true
   });
