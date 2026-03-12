@@ -3,18 +3,21 @@ import { initChat } from "./chat";
 import { loadEncounter, loadEncounterList } from "@/encounters/encounterUtil";
 import WrongModelDialog from "../dialogs/WrongModelDialog";
 import { getLastEncounterUrl } from "@/persistence/lastEncounter";
+import { loadCharacterSpriteset } from "@/sprites/characterSpriteUtil";
 
 const DEFAULT_ENCOUNTER_URL = 'encounters/troll.md';
 
-export async function init(setEncounter:Function, setEncounterList:Function, setLines:Function, setModalDialogName:Function):Promise<boolean> {
+export async function init(setCharacterSpriteset:Function, setEncounter:Function, setEncounterList:Function, setLines:Function, setModalDialogName:Function):Promise<boolean> {
   if (!isLlmConnected()) return false; // This initialization requires LLM connection.
 
   // It's going to double-load in dev environment, and that's harmless. If you decide to add a flag check, you also
   // need to do something like have 3 potential return states, e.g., failed-try-again-after-llm-load, failed-dont-try-again, success.
 
+  const characterSpriteset = await loadCharacterSpriteset('/characters/characters.md');
   const encounterUrl = await getLastEncounterUrl() ?? DEFAULT_ENCOUNTER_URL;
   const encounter = await loadEncounter(encounterUrl);
   const encounterList = await loadEncounterList(encounterUrl);
+  setCharacterSpriteset(characterSpriteset);
   setEncounterList(encounterList);
   initChat(encounter, setLines);
   setEncounter(encounter);
