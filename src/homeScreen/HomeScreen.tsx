@@ -17,8 +17,8 @@ import EncounterList from "@/encounters/types/EncounterList";
 import EncounterSelector from "./EncounterSelector";
 import { isSpeechAvailable, isSpeechEnabled as getIsSpeechEnabled, initSpeech, toggleSpeech } from "@/speech/speechUtil";
 import MicrophonePermissionDialog from "@/loadScreen/MicrophonePermissionDialog";
-import { loadCharacterSpriteset } from "@/sprites/characterSpriteUtil";
-import CharacterSpriteset from "@/sprites/types/CharacterSpriteset";
+import { loadCharacterSpriteset } from "@/components/audienceView/characterSpriteUtil";
+import CharacterSpriteset from "@/components/audienceView/types/CharacterSpriteset";
 import AudienceView from "@/components/audienceView/AudienceView";
 
 const showChat = false;

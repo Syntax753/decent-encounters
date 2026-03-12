@@ -3,7 +3,7 @@ import { initChat } from "./chat";
 import { loadEncounter, loadEncounterList } from "@/encounters/encounterUtil";
 import WrongModelDialog from "../dialogs/WrongModelDialog";
 import { getLastEncounterUrl } from "@/persistence/lastEncounter";
-import { loadCharacterSpriteset } from "@/sprites/characterSpriteUtil";
+import { loadCharacterSpriteset } from "@/components/audienceView/characterSpriteUtil";
 
 const DEFAULT_ENCOUNTER_URL = 'encounters/troll.md';
 

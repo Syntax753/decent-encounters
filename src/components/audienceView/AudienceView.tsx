@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 
-import CharacterSpriteset from '@/sprites/types/CharacterSpriteset';
+import CharacterSpriteset from '@/components/audienceView/types/CharacterSpriteset';
 import Canvas from '../canvas/Canvas';
 import styles from './AudienceView.module.css';
-import CharacterDrawState from '@/sprites/types/CharacterDrawState';
-import { createCharacterDrawState, drawCharacter } from '@/sprites/characterSpriteUtil';
+import CharacterDrawState from './types/CharacterDrawState';
+import { createCharacterDrawState, drawCharacter } from '@/components/audienceView/characterSpriteUtil';
 
 const CROWD_IDLE_UPDATE_INTERVAL = 500; // msecs
 

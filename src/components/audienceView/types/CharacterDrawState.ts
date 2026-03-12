@@ -1,5 +1,5 @@
 import CharacterSprite from "./CharacterSprite";
-import Rect from "./Rect";
+import Rect from "@/drawing/types/Rect";
 
 type CharacterDrawState = {
   spriteMap:ImageBitmap,

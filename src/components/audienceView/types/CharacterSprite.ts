@@ -1,4 +1,4 @@
-import Rect from './Rect';
+import Rect from '@/drawing/types/Rect';
 
 type CharacterSprite = {
   id:string,

@@ -2,8 +2,8 @@ import { parseNameValueLines, parseSections } from "@/encounters/markdownUtil";
 import CharacterSpriteset from "./types/CharacterSpriteset";
 import { baseUrl } from "@/common/urlUtil";
 import CharacterSprite from "./types/CharacterSprite";
-import Rect from "./types/Rect";
-import { createImageBitmapFromImageData, createImageDataFromImageBitmap } from "./drawUtil";
+import Rect from "../../drawing/types/Rect";
+import { createImageBitmapFromImageData, createImageDataFromImageBitmap } from "../../drawing/drawUtil";
 import CharacterDrawState from "./types/CharacterDrawState";
 
 // Marker pixel RGB (CSS shorthand #0f0 => RGB(0,255,0))
