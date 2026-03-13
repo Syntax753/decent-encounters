@@ -252,4 +252,4 @@ export function drawCharacter(drawState:CharacterDrawState, context:CanvasRender
   const faceSourceRect = FACE_SOURCE_RECTS[faceNo];
   context.drawImage(drawState.spriteMap, faceSourceRect.x, faceSourceRect.y, faceSourceRect.w, faceSourceRect.h, 
     faceDestRect.x, faceDestRect.y, faceDestRect.w, faceDestRect.h);
-} 
+}

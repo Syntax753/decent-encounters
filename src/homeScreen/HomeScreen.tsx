@@ -20,8 +20,20 @@ import MicrophonePermissionDialog from "@/loadScreen/MicrophonePermissionDialog"
 import { loadCharacterSpriteset } from "@/components/audienceView/characterSpriteUtil";
 import CharacterSpriteset from "@/components/audienceView/types/CharacterSpriteset";
 import AudienceView from "@/components/audienceView/AudienceView";
+import AudienceMember from "@/encounters/v0/types/AudienceMember";
 
 const showChat = false;
+
+// TODO load this from encounter
+const AUDIENCE_MEMBERS:AudienceMember[] = [
+  {characterId:'Jock', count:10, happiness:0.5, likes:[]},
+  {characterId:'Librarian', count:5, happiness:0.8, likes:[]},
+  {characterId:'Cat Lady', count:5, happiness:0.2, likes:[]},
+  {characterId:'Barber', count:10, happiness:0.5, likes:[]},
+  {characterId:'Plumber', count:5, happiness:0.8, likes:[]},
+  {characterId:'Clown', count:15, happiness:0.2, likes:[]},
+  {characterId:'Ice Skater', count:5, happiness:0.2, likes:[]},
+]
 
 function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -69,7 +81,7 @@ function HomeScreen() {
         <EncounterSelector encounterList={encounterList} onSelect={(url) => startFromUrl(url, setLines, setEncounter)} />
         <h1>{encounter.title}</h1>
         {chatContent}
-        <AudienceView characterSpriteset={characterSpriteset} />
+        <AudienceView characterSpriteset={characterSpriteset} audienceMembers={AUDIENCE_MEMBERS} />
       </div>
       <div className={styles.encounterActions}>
         <h1>Encounter</h1>

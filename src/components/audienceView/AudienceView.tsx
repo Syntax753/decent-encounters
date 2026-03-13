@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import CharacterSpriteset from '@/components/audienceView/types/CharacterSpriteset';
 import Canvas from '../canvas/Canvas';
 import styles from './AudienceView.module.css';
-import CharacterDrawState from './types/CharacterDrawState';
-import { createCharacterDrawState, drawCharacter } from '@/components/audienceView/characterSpriteUtil';
+import AudienceMember from '@/encounters/v0/types/AudienceMember';
+import CrowdDrawState from './types/CrowdDrawState';
+import { createCrowdDrawState, drawCrowd } from './crowdUtil';
 
 const CROWD_IDLE_UPDATE_INTERVAL = 500; // msecs
 
 type Props = {
-  characterSpriteset:CharacterSpriteset|null
+  characterSpriteset:CharacterSpriteset|null,
+  audienceMembers:AudienceMember[]
 }
 
 let lastCrowdUpdate = 0;
@@ -20,50 +22,54 @@ function _getRandomInt(min:number, max:number):number {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function _updateCrowdForIdleMovement(characterDrawStates:CharacterDrawState[]) {
-  for(let i = 0; i < characterDrawStates.length; ++i) {
-    const drawState = characterDrawStates[i];
+function _updateCrowdForIdleMovement(crowdDrawState:CrowdDrawState) {
+  for(let i = 0; i < crowdDrawState.characterDrawStates.length; ++i) {
+    const drawState = crowdDrawState.characterDrawStates[i];
     drawState.bodyFrameNo = _getRandomInt(0, drawState.sprite.bodyRects.length);
     if (drawState.bodyFrameNo === 0) drawState.happiness = Math.random();
   }
 }
 
-function _onDraw(characterDrawStates:CharacterDrawState[], context:CanvasRenderingContext2D) {
+function _onDraw(crowdDrawState:CrowdDrawState, context:CanvasRenderingContext2D) {
   const now = performance.now();
   if (!lastCrowdUpdate || (now - lastCrowdUpdate) > CROWD_IDLE_UPDATE_INTERVAL) {
-    _updateCrowdForIdleMovement(characterDrawStates);
+    _updateCrowdForIdleMovement(crowdDrawState);
     lastCrowdUpdate = now;
   }
   context.fillStyle = 'red';
   context.fillRect(0, 0, context.canvas.width, context.canvas.height);
-  for(let i = 0; i < characterDrawStates.length; ++i) {
-    drawCharacter(characterDrawStates[i], context);
-  }
-  
+  drawCrowd(crowdDrawState, context);
 }
 
-function AudienceView({characterSpriteset}:Props) {
-  const [characterDrawStates, setCharacterDrawStates] = useState<CharacterDrawState[]>([]);
+function _onDrawLoading(context:CanvasRenderingContext2D) {
+  context.fillStyle = 'red';
+  context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+}
+
+function AudienceView({characterSpriteset, audienceMembers}:Props) {
+  const crowdDrawStateRef = useRef<CrowdDrawState|null>(null);
+  const containerRef = useRef<HTMLDivElement|null>(null);
 
   useEffect(() => {
-    if (!characterSpriteset) return;
-    const nextCharacterDrawStates = [
-      // Row 1
-      createCharacterDrawState(characterSpriteset, 'Jock', {x:0, y:70, w:128*.9, h:256*.9}, 2, 4),
-      createCharacterDrawState(characterSpriteset, 'Librarian', {x:110, y:80, w:128*.9, h:256*.9}, 2, 4),
-      createCharacterDrawState(characterSpriteset, 'Ice Skater', {x:220, y:70, w:128*.9, h:256*.9}, 2, 4),
-      createCharacterDrawState(characterSpriteset, 'Plumber', {x:330, y:80, w:128*.9, h:256*.9}, 2, 4),
-      createCharacterDrawState(characterSpriteset, 'Barber', {x:440, y:70, w:128*.9, h:256*.9}, 2, 4),
-      
-      // Row 2
-      createCharacterDrawState(characterSpriteset, 'Clown', {x:60, y:100, w:128, h:256}, 2, 4),
-      createCharacterDrawState(characterSpriteset, 'Cat Lady', {x:170, y:110, w:128, h:256}, 2, 4),
-    ];
-    setCharacterDrawStates(nextCharacterDrawStates);
-  }, [characterSpriteset]);
+    if (!characterSpriteset || audienceMembers.length === 0) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const canvasWidth = Math.floor(rect.width);
+    const canvasHeight = Math.floor(rect.height);
+    if (canvasWidth === 0 || canvasHeight === 0) return;
+    crowdDrawStateRef.current = createCrowdDrawState(characterSpriteset, audienceMembers, canvasWidth, canvasHeight);
+  }, [characterSpriteset, audienceMembers]);
 
-  return (<div className={styles.container}>
-    <Canvas onDraw={(context) => _onDraw(characterDrawStates, context)} isAnimated/>
+  return (<div ref={containerRef} className={styles.container}>
+    <Canvas onDraw={(context) => {
+      const crowdDrawState = crowdDrawStateRef.current;
+      if (!crowdDrawState) {
+        _onDrawLoading(context);
+        return;
+      }
+      _onDraw(crowdDrawState, context)
+    }} isAnimated/>
   </div>);
 }
 
