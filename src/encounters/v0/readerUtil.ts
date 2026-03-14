@@ -140,10 +140,14 @@ function _parseAudienceSection(audienceSection:string):AudienceMember[] {
   const audienceCharacters = parseSections(audienceSection, 2);
   const names = Object.keys(audienceCharacters);
   
-  return names.map(name => {
-    const characterVars = parseNameValueLines(audienceCharacters[name]);
-    const likes = characterVars.likes.split('|').map(keyword => keyword.trim()).filter(keyword => keyword !== '');
-    return { name, likes };
+  return names.map(characterId => {
+    const characterVars = parseNameValueLines(audienceCharacters[characterId]);
+    const likes = characterVars.likes === undefined // TODO - likes should come from characters.md instead of the encounter.
+      ? [] 
+      : characterVars.likes.split('|').map(keyword => keyword.trim()).filter(keyword => keyword !== '');
+    const happiness = characterVars.happiness === undefined ? .5 : parseFloat(characterVars.happiness);
+    const count = characterVars.count === undefined ? 1 : parseInt(characterVars.count);
+    return { characterId, likes, happiness, count };
   });
 }
 

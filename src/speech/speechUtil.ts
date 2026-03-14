@@ -9,7 +9,7 @@ let theInitSpeechPromise:Promise<boolean>|null = null;
 
 export type StringCallback = (s:string) => void;
 
-function _onFinal(message:string) {
+function _onPartial(message:string) {
   if (theEncounterSession) theEncounterSession.prompt(message);
 }
 
@@ -23,7 +23,7 @@ export async function initSpeech(onStatusUpdate:StatusUpdateCallback):Promise<bo
 
     function _onReady() {
       if (!theRecognizer) throw Error('Unexpected');
-      theRecognizer.bindCallbacks(() => {}, () => {}, () => {}, _onFinal);
+      theRecognizer.bindCallbacks(_onPartial, () => {}, () => {}, () => {});
       onStatusUpdate('Speech recognition initialized.', 100);
       resolve(true);
     }

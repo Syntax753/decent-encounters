@@ -84,7 +84,6 @@ export async function connect(modelId: string, onStatusUpdate: StatusUpdateCallb
       }
     }
   }
-  updateModelDeviceLoadHistory(theConnection.modelId, true, Date.now() - startLoadTime);
   theConnection.state = LLMConnectionState.READY;
 }
 
